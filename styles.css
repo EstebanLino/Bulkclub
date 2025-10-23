@@ -401,6 +401,105 @@ header .subtitle {
     color: var(--text-light);
 }
 
+/* View Mode - Consultation */
+.view-mode {
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.view-session-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.view-exercises-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.view-exercise-card {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 16px;
+    animation: fadeInUp 0.3s ease;
+}
+
+.view-exercise-name {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.view-exercise-name::before {
+    content: '';
+    width: 4px;
+    height: 16px;
+    background: var(--workout-green);
+    border-radius: 2px;
+}
+
+.view-exercise-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.view-detail-item {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.view-detail-label {
+    font-size: 11px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.view-detail-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.view-detail-value .unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-light);
+    margin-left: 2px;
+}
+
+.view-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+}
+
+.view-empty-state p {
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+.view-empty-state span {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
 /* Modal Actions */
 .modal-actions {
     padding: 20px;
@@ -410,7 +509,8 @@ header .subtitle {
     bottom: 0;
 }
 
-.save-btn {
+.save-btn,
+.edit-btn {
     width: 100%;
     padding: 16px;
     background: var(--workout-green);
@@ -423,13 +523,15 @@ header .subtitle {
     transition: all 0.3s ease;
 }
 
-.save-btn:hover {
+.save-btn:hover,
+.edit-btn:hover {
     background: var(--workout-green-dark);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(127, 176, 105, 0.3);
 }
 
-.save-btn:active {
+.save-btn:active,
+.edit-btn:active {
     transform: translateY(0);
 }
 

@@ -27,42 +27,55 @@
                     <button class="close-btn" id="closeModal">&times;</button>
                 </div>
 
-                <div class="session-type-toggle">
+                <div class="session-type-toggle" id="sessionTypeToggle">
                     <button class="toggle-btn active" data-type="workout">Séance</button>
                     <button class="toggle-btn" data-type="rest">Repos</button>
                 </div>
 
-                <!-- Workout Section -->
-                <div class="workout-section" id="workoutSection">
-                    <div class="session-name-container">
-                        <input
-                            type="text"
-                            id="sessionName"
-                            class="session-name-input"
-                            placeholder="Nom de la séance (ex: Push, Pull, Legs...)"
-                        >
-                    </div>
+                <!-- VIEW MODE - Consultation -->
+                <div class="view-mode" id="viewMode" style="display: none;">
+                    <div class="view-session-name" id="viewSessionName"></div>
 
-                    <div class="exercises-container" id="exercisesContainer">
-                        <!-- Exercises will be added here -->
+                    <div class="view-exercises-container" id="viewExercisesContainer">
+                        <!-- Exercises in view mode will be displayed here -->
                     </div>
-
-                    <button class="add-exercise-btn" id="addExerciseBtn">
-                        <span class="plus-icon">+</span>
-                        Ajouter un exercice
-                    </button>
                 </div>
 
-                <!-- Rest Day Message -->
-                <div class="rest-section" id="restSection" style="display: none;">
-                    <div class="rest-message">
-                        <span class="rest-icon">🌿</span>
-                        <p>Jour de repos</p>
-                        <span class="rest-subtitle">Récupération et régénération</span>
+                <!-- EDIT MODE - Modification -->
+                <div class="edit-mode" id="editMode">
+                    <!-- Workout Section -->
+                    <div class="workout-section" id="workoutSection">
+                        <div class="session-name-container">
+                            <input
+                                type="text"
+                                id="sessionName"
+                                class="session-name-input"
+                                placeholder="Nom de la séance (ex: Push, Pull, Legs...)"
+                            >
+                        </div>
+
+                        <div class="exercises-container" id="exercisesContainer">
+                            <!-- Exercises will be added here -->
+                        </div>
+
+                        <button class="add-exercise-btn" id="addExerciseBtn">
+                            <span class="plus-icon">+</span>
+                            Ajouter un exercice
+                        </button>
+                    </div>
+
+                    <!-- Rest Day Message -->
+                    <div class="rest-section" id="restSection" style="display: none;">
+                        <div class="rest-message">
+                            <span class="rest-icon">🌿</span>
+                            <p>Jour de repos</p>
+                            <span class="rest-subtitle">Récupération et régénération</span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="modal-actions">
+                    <button class="edit-btn" id="editBtn" style="display: none;">Modifier</button>
                     <button class="save-btn" id="saveBtn">Enregistrer</button>
                 </div>
             </div>

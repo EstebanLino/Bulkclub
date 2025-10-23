@@ -27,6 +27,9 @@ const dayNames = {
 // Current editing day
 let currentDay = null;
 
+// Current mode: 'view' or 'edit'
+let currentMode = 'edit';
+
 // Initialize App
 function initApp() {
     loadFromLocalStorage();
@@ -79,10 +82,20 @@ function openModal(dayKey) {
     const isWorkout = dayData.type === 'workout';
     updateSessionType(isWorkout ? 'workout' : 'rest');
 
+    // Determine if session has saved data
+    const hasSavedData = isWorkout && (dayData.name || dayData.exercises.length > 0);
+
     // Load session data
     if (isWorkout) {
         document.getElementById('sessionName').value = dayData.name || '';
         renderExercises();
+    }
+
+    // Show in view mode if has saved data, otherwise edit mode
+    if (hasSavedData) {
+        switchToViewMode();
+    } else {
+        switchToEditMode();
     }
 
     // Show modal
@@ -94,6 +107,102 @@ function closeModal() {
     const modal = document.getElementById('sessionModal');
     modal.classList.remove('active');
     currentDay = null;
+    currentMode = 'edit';
+}
+
+// Switch to View Mode
+function switchToViewMode() {
+    currentMode = 'view';
+
+    // Show/hide sections
+    document.getElementById('viewMode').style.display = 'block';
+    document.getElementById('editMode').style.display = 'none';
+    document.getElementById('sessionTypeToggle').style.display = 'none';
+
+    // Show/hide buttons
+    document.getElementById('editBtn').style.display = 'block';
+    document.getElementById('saveBtn').style.display = 'none';
+
+    // Render view mode content
+    renderViewMode();
+}
+
+// Switch to Edit Mode
+function switchToEditMode() {
+    currentMode = 'edit';
+
+    // Show/hide sections
+    document.getElementById('viewMode').style.display = 'none';
+    document.getElementById('editMode').style.display = 'block';
+    document.getElementById('sessionTypeToggle').style.display = 'flex';
+
+    // Show/hide buttons
+    document.getElementById('editBtn').style.display = 'none';
+    document.getElementById('saveBtn').style.display = 'block';
+
+    // Update session type display
+    const dayData = workoutData.weeks[currentDay];
+    updateSessionType(dayData.type);
+}
+
+// Render View Mode
+function renderViewMode() {
+    if (!currentDay) return;
+
+    const dayData = workoutData.weeks[currentDay];
+    const viewSessionName = document.getElementById('viewSessionName');
+    const viewExercisesContainer = document.getElementById('viewExercisesContainer');
+
+    // Display session name
+    viewSessionName.textContent = dayData.name || 'Séance d\'entraînement';
+
+    // Clear container
+    viewExercisesContainer.innerHTML = '';
+
+    // Display exercises
+    if (dayData.exercises.length === 0) {
+        viewExercisesContainer.innerHTML = `
+            <div class="view-empty-state">
+                <p>Aucun exercice pour cette séance</p>
+                <span>Cliquez sur "Modifier" pour en ajouter</span>
+            </div>
+        `;
+    } else {
+        dayData.exercises.forEach(exercise => {
+            const exerciseCard = createViewExerciseCard(exercise);
+            viewExercisesContainer.appendChild(exerciseCard);
+        });
+    }
+}
+
+// Create View Exercise Card
+function createViewExerciseCard(exercise) {
+    const card = document.createElement('div');
+    card.className = 'view-exercise-card';
+
+    const weightDisplay = exercise.weight ? `${exercise.weight}<span class="unit">kg</span>` : '-';
+    const setsDisplay = exercise.sets || '-';
+    const repsDisplay = exercise.reps || '-';
+
+    card.innerHTML = `
+        <div class="view-exercise-name">${exercise.name || 'Exercice sans nom'}</div>
+        <div class="view-exercise-details">
+            <div class="view-detail-item">
+                <div class="view-detail-label">Poids</div>
+                <div class="view-detail-value">${weightDisplay}</div>
+            </div>
+            <div class="view-detail-item">
+                <div class="view-detail-label">Séries</div>
+                <div class="view-detail-value">${setsDisplay}</div>
+            </div>
+            <div class="view-detail-item">
+                <div class="view-detail-label">Reps</div>
+                <div class="view-detail-value">${repsDisplay}</div>
+            </div>
+        </div>
+    `;
+
+    return card;
 }
 
 // Update Session Type
@@ -250,7 +359,16 @@ function saveSession() {
 
     saveToLocalStorage();
     renderWeekView();
-    closeModal();
+
+    // Switch to view mode if workout session with data
+    const dayData = workoutData.weeks[currentDay];
+    const hasSavedData = sessionType === 'workout' && (dayData.name || dayData.exercises.length > 0);
+
+    if (hasSavedData) {
+        switchToViewMode();
+    } else {
+        closeModal();
+    }
 }
 
 // Local Storage Functions
@@ -297,6 +415,9 @@ function attachEventListeners() {
 
     // Save button
     document.getElementById('saveBtn').addEventListener('click', saveSession);
+
+    // Edit button
+    document.getElementById('editBtn').addEventListener('click', switchToEditMode);
 
     // Session name input
     document.getElementById('sessionName').addEventListener('input', (e) => {
