@@ -14,9 +14,11 @@ let workoutData = {
     },
     // Rotation feature (optional)
     rotationEnabled: false,
-    templates: [],
+    rotationRestDays: [], // Days marked as rest in rotation mode
     currentWeek: 1,
-    weekHistory: {}
+    weekHistory: {},
+    // Captured sessions before rotation
+    capturedSessions: []
 };
 
 // Day names in French
@@ -40,14 +42,12 @@ let currentMode = 'edit';
 function initApp() {
     loadFromLocalStorage();
 
-    // Restore checkbox state
-    const checkbox = document.getElementById('rotationCheckbox');
-    checkbox.checked = workoutData.rotationEnabled || false;
-
-    // Render based on mode
+    // Update button state
+    const rotationBtn = document.getElementById('rotationBtn');
     if (workoutData.rotationEnabled) {
+        rotationBtn.textContent = '🔄 Désactiver la rotation';
+        rotationBtn.classList.add('active');
         document.getElementById('weekNavigation').style.display = 'flex';
-        document.getElementById('settingsBtn').style.display = 'inline-flex';
         renderRotationWeekView();
     } else {
         renderWeekView();
@@ -410,11 +410,34 @@ function loadFromLocalStorage() {
     }
 }
 
+
 //================================
-// ROTATION MODE FUNCTIONS
+// ROTATION MODE FUNCTIONS (SIMPLIFIED)
 //================================
 
-// Get current week data (rotation mode)
+// Capture existing workout sessions
+function captureSessions() {
+    const sessions = [];
+    Object.keys(dayNames).forEach(dayKey => {
+        const dayData = workoutData.weeks[dayKey];
+        if (dayData.type === 'workout' && (dayData.name || dayData.exercises.length > 0)) {
+            sessions.push({
+                name: dayData.name,
+                exercises: JSON.parse(JSON.stringify(dayData.exercises))
+            });
+        }
+    });
+    return sessions;
+}
+
+// Get workout days (non-rest days in rotation)
+function getWorkoutDays() {
+    return Object.keys(dayNames).filter(dayKey =>
+        !workoutData.rotationRestDays.includes(dayKey)
+    );
+}
+
+// Get current week data with rotation
 function getRotationWeekData() {
     const weekKey = `week_${workoutData.currentWeek}`;
 
@@ -423,28 +446,26 @@ function getRotationWeekData() {
         return workoutData.weekHistory[weekKey];
     }
 
-    // Otherwise, apply rotation from templates
+    // Otherwise, apply rotation from captured sessions
     const weekData = {};
-    const workoutDays = Object.keys(dayNames).filter(
-        dayKey => workoutData.weeks[dayKey].type === 'workout'
-    );
+    const workoutDays = getWorkoutDays();
 
-    if (workoutData.templates.length > 0 && workoutDays.length > 0) {
+    if (workoutData.capturedSessions.length > 0 && workoutDays.length > 0) {
         // Calculate rotation offset based on week number
         const totalTrainingDays = workoutDays.length;
-        const templateCount = workoutData.templates.length;
-        const weekOffset = ((workoutData.currentWeek - 1) * totalTrainingDays) % templateCount;
+        const sessionCount = workoutData.capturedSessions.length;
+        const weekOffset = ((workoutData.currentWeek - 1) * totalTrainingDays) % sessionCount;
 
         let trainingDayIndex = 0;
         Object.keys(dayNames).forEach(dayKey => {
-            if (workoutData.weeks[dayKey].type === 'workout') {
-                const templateIndex = (weekOffset + trainingDayIndex) % templateCount;
-                const template = workoutData.templates[templateIndex];
+            if (workoutDays.includes(dayKey)) {
+                const sessionIndex = (weekOffset + trainingDayIndex) % sessionCount;
+                const session = workoutData.capturedSessions[sessionIndex];
 
                 weekData[dayKey] = {
                     type: 'workout',
-                    name: template.name,
-                    exercises: JSON.parse(JSON.stringify(template.exercises || []))
+                    name: session.name,
+                    exercises: JSON.parse(JSON.stringify(session.exercises))
                 };
                 trainingDayIndex++;
             } else {
@@ -452,9 +473,9 @@ function getRotationWeekData() {
             }
         });
     } else {
-        // No templates, use base config
+        // No sessions captured, use rest for all
         Object.keys(dayNames).forEach(dayKey => {
-            weekData[dayKey] = { ...workoutData.weeks[dayKey] };
+            weekData[dayKey] = { type: 'rest', name: '', exercises: [] };
         });
     }
 
@@ -621,132 +642,110 @@ function goToNextWeek() {
     saveToLocalStorage();
 }
 
-// Templates management
-function openTemplatesModal() {
-    const modal = document.getElementById('templatesModal');
-    renderTemplatesList();
-    renderRotationPreview();
+// Open rotation configuration modal
+function openRotationConfigModal() {
+    const modal = document.getElementById('rotationConfigModal');
+    renderDaysCheckboxes();
     modal.classList.add('active');
 }
 
-function closeTemplatesModal() {
-    document.getElementById('templatesModal').classList.remove('active');
+// Close rotation configuration modal
+function closeRotationConfigModal() {
+    document.getElementById('rotationConfigModal').classList.remove('active');
 }
 
-function renderTemplatesList() {
-    const container = document.getElementById('templatesList');
+// Render days checkboxes
+function renderDaysCheckboxes() {
+    const container = document.getElementById('daysCheckboxes');
     container.innerHTML = '';
 
-    workoutData.templates.forEach((template, index) => {
-        const card = document.createElement('div');
-        card.className = 'template-card';
-        card.innerHTML = `
-            <span class="template-handle">☰</span>
+    Object.keys(dayNames).forEach(dayKey => {
+        const item = document.createElement('div');
+        item.className = 'day-checkbox-item';
+
+        const isChecked = workoutData.rotationRestDays.includes(dayKey);
+
+        item.innerHTML = `
             <input
-                type="text"
-                class="template-input"
-                placeholder="Nom du template (ex: Push, Pull, Legs...)"
-                value="${template.name || ''}"
-                data-index="${index}"
+                type="checkbox"
+                id="rest_${dayKey}"
+                ${isChecked ? 'checked' : ''}
+                data-day="${dayKey}"
             >
-            <button class="delete-template-btn" data-index="${index}">×</button>
+            <label class="day-checkbox-label" for="rest_${dayKey}">
+                ${dayNames[dayKey]}
+            </label>
         `;
 
-        const input = card.querySelector('.template-input');
-        const deleteBtn = card.querySelector('.delete-template-btn');
-
-        input.addEventListener('input', (e) => {
-            workoutData.templates[index].name = e.target.value;
-            renderRotationPreview();
+        const checkbox = item.querySelector('input');
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                if (!workoutData.rotationRestDays.includes(dayKey)) {
+                    workoutData.rotationRestDays.push(dayKey);
+                }
+            } else {
+                workoutData.rotationRestDays = workoutData.rotationRestDays.filter(d => d !== dayKey);
+            }
         });
 
-        deleteBtn.addEventListener('click', () => {
-            workoutData.templates.splice(index, 1);
-            renderTemplatesList();
-            renderRotationPreview();
-        });
-
-        container.appendChild(card);
+        container.appendChild(item);
     });
 }
 
-function addTemplate() {
-    workoutData.templates.push({ name: '', exercises: [] });
-    renderTemplatesList();
-    renderRotationPreview();
-}
+// Activate rotation
+function activateRotation() {
+    // Capture current sessions
+    workoutData.capturedSessions = captureSessions();
 
-function saveTemplates() {
+    if (workoutData.capturedSessions.length === 0) {
+        alert('Aucune séance à faire tourner. Créez d\'abord vos séances dans la vue hebdomadaire.');
+        closeRotationConfigModal();
+        return;
+    }
+
+    // Enable rotation
+    workoutData.rotationEnabled = true;
+    workoutData.currentWeek = 1;
+
+    // Update UI
+    const rotationBtn = document.getElementById('rotationBtn');
+    rotationBtn.textContent = '🔄 Désactiver la rotation';
+    rotationBtn.classList.add('active');
+
+    document.getElementById('weekNavigation').style.display = 'flex';
+
+    // Save and render
     saveToLocalStorage();
     renderRotationWeekView();
-    closeTemplatesModal();
+    closeRotationConfigModal();
 }
 
-function renderRotationPreview() {
-    const container = document.getElementById('rotationInfo');
+// Deactivate rotation
+function deactivateRotation() {
+    workoutData.rotationEnabled = false;
 
-    if (workoutData.templates.length === 0) {
-        container.innerHTML = '';
-        return;
-    }
+    // Update UI
+    const rotationBtn = document.getElementById('rotationBtn');
+    rotationBtn.textContent = '🔄 Activer la rotation des séances';
+    rotationBtn.classList.add('active');
+    rotationBtn.classList.remove('active');
 
-    const workoutDays = Object.keys(dayNames).filter(
-        dayKey => workoutData.weeks[dayKey].type === 'workout'
-    );
+    document.getElementById('weekNavigation').style.display = 'none';
 
-    if (workoutDays.length === 0) {
-        container.innerHTML = `
-            <h3>Aperçu de la rotation</h3>
-            <p style="font-size: 13px; color: var(--text-light); margin-top: 8px;">
-                Configurez vos jours d'entraînement dans la vue hebdomadaire.
-            </p>
-        `;
-        return;
-    }
-
-    const previewHtml = ['<h3>Aperçu de la rotation</h3><div class="rotation-preview">'];
-
-    for (let week = 1; week <= 3; week++) {
-        const weekTemplates = [];
-        const totalTrainingDays = workoutDays.length;
-        const templateCount = workoutData.templates.length;
-        const weekOffset = ((week - 1) * totalTrainingDays) % templateCount;
-
-        for (let i = 0; i < totalTrainingDays; i++) {
-            const templateIndex = (weekOffset + i) % templateCount;
-            const template = workoutData.templates[templateIndex];
-            weekTemplates.push(template.name || `Template ${templateIndex + 1}`);
-        }
-
-        previewHtml.push(`
-            <div class="rotation-week">
-                <strong>Semaine ${week}:</strong> ${weekTemplates.join(' → ')}
-            </div>
-        `);
-    }
-
-    previewHtml.push('</div>');
-    container.innerHTML = previewHtml.join('');
-}
-
-// Toggle rotation mode
-function toggleRotationMode(enabled) {
-    workoutData.rotationEnabled = enabled;
-
-    const weekNav = document.getElementById('weekNavigation');
-    const settingsBtn = document.getElementById('settingsBtn');
-
-    if (enabled) {
-        weekNav.style.display = 'flex';
-        settingsBtn.style.display = 'inline-flex';
-        renderRotationWeekView();
-    } else {
-        weekNav.style.display = 'none';
-        settingsBtn.style.display = 'none';
-        renderWeekView();
-    }
-
+    // Save and render
     saveToLocalStorage();
+    renderWeekView();
+}
+
+// Toggle rotation (button click)
+function toggleRotation() {
+    if (workoutData.rotationEnabled) {
+        if (confirm('Voulez-vous désactiver la rotation ? Vous reviendrez à la vue hebdomadaire normale.')) {
+            deactivateRotation();
+        }
+    } else {
+        openRotationConfigModal();
+    }
 }
 
 // Attach Event Listeners
@@ -790,27 +789,21 @@ function attachEventListeners() {
         }
     });
 
-    // Rotation mode checkbox
-    document.getElementById('rotationCheckbox').addEventListener('change', (e) => {
-        toggleRotationMode(e.target.checked);
-    });
-
-    // Settings button (templates)
-    document.getElementById('settingsBtn').addEventListener('click', openTemplatesModal);
+    // Rotation button
+    document.getElementById('rotationBtn').addEventListener('click', toggleRotation);
 
     // Week navigation
     document.getElementById('prevWeek').addEventListener('click', goToPreviousWeek);
     document.getElementById('nextWeek').addEventListener('click', goToNextWeek);
 
-    // Templates modal
-    document.getElementById('closeTemplatesModal').addEventListener('click', closeTemplatesModal);
-    document.getElementById('templatesModal').addEventListener('click', (e) => {
-        if (e.target.id === 'templatesModal') {
-            closeTemplatesModal();
+    // Rotation config modal
+    document.getElementById('closeRotationConfigModal').addEventListener('click', closeRotationConfigModal);
+    document.getElementById('rotationConfigModal').addEventListener('click', (e) => {
+        if (e.target.id === 'rotationConfigModal') {
+            closeRotationConfigModal();
         }
     });
-    document.getElementById('addTemplateBtn').addEventListener('click', addTemplate);
-    document.getElementById('saveTemplatesBtn').addEventListener('click', saveTemplates);
+    document.getElementById('saveRotationConfigBtn').addEventListener('click', activateRotation);
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
@@ -818,8 +811,8 @@ function attachEventListeners() {
         if (e.key === 'Escape') {
             if (document.getElementById('sessionModal').classList.contains('active')) {
                 closeModal();
-            } else if (document.getElementById('templatesModal').classList.contains('active')) {
-                closeTemplatesModal();
+            } else if (document.getElementById('rotationConfigModal').classList.contains('active')) {
+                closeRotationConfigModal();
             }
         }
 
@@ -832,8 +825,8 @@ function attachEventListeners() {
                 } else {
                     saveSession();
                 }
-            } else if (document.getElementById('templatesModal').classList.contains('active')) {
-                saveTemplates();
+            } else if (document.getElementById('rotationConfigModal').classList.contains('active')) {
+                activateRotation();
             }
         }
     });
