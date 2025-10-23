@@ -52,7 +52,12 @@ function initApp() {
     attachEventListeners();
 }
 
-// Get workout sessions (non-rotation sessions)
+// Check if rotation mode is active
+function isRotationActive() {
+    return Object.values(workoutData.weeks).some(day => day.type === 'rotation');
+}
+
+// Get all workout sessions (template sessions to rotate)
 function getWorkoutSessions() {
     const sessions = [];
     Object.keys(dayNames).forEach(dayKey => {
@@ -68,33 +73,41 @@ function getWorkoutSessions() {
     return sessions;
 }
 
-// Get rotated session for a day based on current week
-function getRotatedSession(dayKey) {
-    const workoutSessions = getWorkoutSessions();
+// Get all training days (workout + rotation days, excluding rest days)
+function getTrainingDays() {
+    return Object.keys(dayNames).filter(key => {
+        const dayData = workoutData.weeks[key];
+        return dayData.type === 'workout' || dayData.type === 'rotation';
+    });
+}
 
+// Get rotated session for a day based on current week
+// When rotation is active, ALL training days (workout + rotation) rotate through sessions
+function getRotatedSessionForDay(dayKey) {
+    if (!isRotationActive()) {
+        return null;
+    }
+
+    const workoutSessions = getWorkoutSessions();
     if (workoutSessions.length === 0) {
         return null;
     }
 
-    // Get rotation days (days marked as rotation)
-    const rotationDays = Object.keys(dayNames).filter(key =>
-        workoutData.weeks[key].type === 'rotation'
-    );
-
-    if (rotationDays.length === 0) {
+    const trainingDays = getTrainingDays();
+    if (trainingDays.length === 0) {
         return null;
     }
 
-    // Find the index of the current day in rotation days
-    const dayIndex = rotationDays.indexOf(dayKey);
+    // Find the index of the current day in training days
+    const dayIndex = trainingDays.indexOf(dayKey);
     if (dayIndex === -1) {
         return null;
     }
 
     // Calculate which session should be shown this week
     const sessionCount = workoutSessions.length;
-    const totalRotationDays = rotationDays.length;
-    const weekOffset = ((workoutData.currentWeek - 1) * totalRotationDays) % sessionCount;
+    const totalTrainingDays = trainingDays.length;
+    const weekOffset = ((workoutData.currentWeek - 1) * totalTrainingDays) % sessionCount;
     const sessionIndex = (weekOffset + dayIndex) % sessionCount;
 
     return workoutSessions[sessionIndex];
@@ -108,19 +121,30 @@ function renderWeekView() {
     // Update week number
     document.getElementById('weekNumber').textContent = workoutData.currentWeek;
 
+    const rotationActive = isRotationActive();
+
     Object.keys(dayNames).forEach(dayKey => {
         const dayData = workoutData.weeks[dayKey];
-        let isWorkout = dayData.type === 'workout' || dayData.type === 'rotation';
+        let isWorkout = false;
         let sessionTitle = '';
 
-        if (dayData.type === 'workout') {
+        // If rotation is active, ALL training days show rotated sessions
+        if (rotationActive && (dayData.type === 'workout' || dayData.type === 'rotation')) {
+            const rotatedSession = getRotatedSessionForDay(dayKey);
+            if (rotatedSession) {
+                sessionTitle = `🔄 ${rotatedSession.name || 'Séance'}`;
+                isWorkout = true;
+            } else {
+                sessionTitle = 'Rotation (aucune séance)';
+                isWorkout = false;
+            }
+        } else if (dayData.type === 'workout') {
+            // No rotation active, show normal workout
             sessionTitle = dayData.name || 'Séance d\'entraînement';
-        } else if (dayData.type === 'rotation') {
-            const rotatedSession = getRotatedSession(dayKey);
-            sessionTitle = rotatedSession ? `🔄 ${rotatedSession.name || 'Séance'}` : 'Rotation (aucune séance)';
-            isWorkout = !!rotatedSession;
-        } else {
+            isWorkout = true;
+        } else if (dayData.type === 'rest') {
             sessionTitle = 'Jour de repos';
+            isWorkout = false;
         }
 
         const dayCard = document.createElement('div');
@@ -145,6 +169,7 @@ function openModal(dayKey) {
     currentDay = dayKey;
     const modal = document.getElementById('sessionModal');
     const dayData = workoutData.weeks[dayKey];
+    const rotationActive = isRotationActive();
 
     // Set modal title
     document.getElementById('modalDay').textContent = dayNames[dayKey];
@@ -152,8 +177,39 @@ function openModal(dayKey) {
     // Set session type
     updateSessionType(dayData.type);
 
-    // Handle different types
-    if (dayData.type === 'workout') {
+    // If rotation is active and this is a training day, show rotated session
+    if (rotationActive && (dayData.type === 'workout' || dayData.type === 'rotation')) {
+        const rotatedSession = getRotatedSessionForDay(dayKey);
+        const sessionDisplay = document.getElementById('rotationCurrentSession');
+
+        if (rotatedSession) {
+            sessionDisplay.innerHTML = `
+                <h4>Cette semaine</h4>
+                <div class="session-name">${rotatedSession.name || 'Séance d\'entraînement'}</div>
+                <div class="rotation-exercises-preview" style="margin-top: 16px;">
+                    ${rotatedSession.exercises.map(ex => `
+                        <div style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <div style="font-weight: 500;">${ex.name || 'Exercice'}</div>
+                            <div style="font-size: 13px; color: var(--text-light); margin-top: 4px;">
+                                ${ex.weight ? ex.weight + ' kg' : '-'} • ${ex.sets || '-'} séries • ${ex.reps || '-'} reps
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            sessionDisplay.innerHTML = `
+                <p style="font-size: 14px; color: var(--text-light);">
+                    Aucune séance définie pour la rotation.<br>
+                    Créez d'abord des séances en mode "Séance".
+                </p>
+            `;
+        }
+        // Show rotation section (set type to rotation for display)
+        updateSessionType('rotation');
+        switchToEditMode();
+    } else if (dayData.type === 'workout') {
+        // No rotation active, show normal workout
         const hasSavedData = dayData.name || dayData.exercises.length > 0;
         document.getElementById('sessionName').value = dayData.name || '';
         renderExercises();
@@ -163,27 +219,7 @@ function openModal(dayKey) {
         } else {
             switchToEditMode();
         }
-    } else if (dayData.type === 'rotation') {
-        // Show rotation info
-        const rotatedSession = getRotatedSession(dayKey);
-        const sessionDisplay = document.getElementById('rotationCurrentSession');
-
-        if (rotatedSession) {
-            sessionDisplay.innerHTML = `
-                <h4>Cette semaine</h4>
-                <div class="session-name">${rotatedSession.name || 'Séance d\'entraînement'}</div>
-            `;
-        } else {
-            sessionDisplay.innerHTML = `
-                <p style="font-size: 14px; color: var(--text-light);">
-                    Aucune séance définie pour la rotation.<br>
-                    Créez d'abord des séances dans d'autres jours.
-                </p>
-            `;
-        }
-        // Show in edit mode so rotation section is visible
-        switchToEditMode();
-    } else {
+    } else if (dayData.type === 'rest') {
         // Rest day - show in edit mode
         switchToEditMode();
     }
