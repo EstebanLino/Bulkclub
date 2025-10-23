@@ -12,7 +12,20 @@
         <header>
             <h1>Mes Séances</h1>
             <p class="subtitle">Planifiez et suivez vos entraînements</p>
+            <button class="templates-btn" id="templatesBtn">
+                <span>⚙️</span> Gérer mes templates
+            </button>
         </header>
+
+        <!-- Week Navigation -->
+        <div class="week-navigation" id="weekNavigation">
+            <button class="week-nav-btn" id="prevWeek">←</button>
+            <div class="week-info">
+                <span class="week-label">Semaine</span>
+                <span class="week-number" id="weekNumber">1</span>
+            </div>
+            <button class="week-nav-btn" id="nextWeek">→</button>
+        </div>
 
         <!-- Week View -->
         <section class="week-view" id="weekView">
@@ -77,6 +90,39 @@
                 <div class="modal-actions">
                     <button class="edit-btn" id="editBtn" style="display: none;">Modifier</button>
                     <button class="save-btn" id="saveBtn">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates Management Modal -->
+        <div class="modal" id="templatesModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Mes Templates</h2>
+                    <button class="close-btn" id="closeTemplatesModal">&times;</button>
+                </div>
+
+                <div class="templates-content">
+                    <p class="templates-description">
+                        Créez vos séances templates qui se répéteront en rotation sur vos jours d'entraînement.
+                    </p>
+
+                    <div class="templates-list" id="templatesList">
+                        <!-- Templates will be rendered here -->
+                    </div>
+
+                    <button class="add-template-btn" id="addTemplateBtn">
+                        <span class="plus-icon">+</span>
+                        Créer un nouveau template
+                    </button>
+
+                    <div class="rotation-info" id="rotationInfo">
+                        <!-- Rotation preview will be shown here -->
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="save-btn" id="saveTemplatesBtn">Enregistrer</button>
                 </div>
             </div>
         </div>
