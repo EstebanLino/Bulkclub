@@ -312,7 +312,7 @@ header .subtitle {
 .exercise-details {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 6px;
 }
 
 .detail-group {
@@ -321,24 +321,25 @@ header .subtitle {
 }
 
 .detail-label {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-light);
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     font-weight: 500;
 }
 
 .detail-input {
-    padding: 10px 8px;
+    padding: 8px 4px;
     border: 1px solid var(--border-light);
-    border-radius: 8px;
-    font-size: 14px;
+    border-radius: 6px;
+    font-size: 13px;
     text-align: center;
     background: white;
     color: var(--text-dark);
     outline: none;
     transition: all 0.2s ease;
+    width: 100%;
 }
 
 .detail-input:focus {
@@ -450,38 +451,38 @@ header .subtitle {
 .view-exercise-details {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: 6px;
 }
 
 .view-detail-item {
     display: flex;
     flex-direction: column;
     background: white;
-    padding: 12px;
+    padding: 10px 6px;
     border-radius: 8px;
     text-align: center;
 }
 
 .view-detail-label {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-light);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     font-weight: 500;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .view-detail-value {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-dark);
 }
 
 .view-detail-value .unit {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 400;
     color: var(--text-light);
-    margin-left: 2px;
+    margin-left: 1px;
 }
 
 .view-empty-state {
@@ -609,6 +610,23 @@ header .subtitle {
 
     .exercise-details {
         gap: 12px;
+    }
+
+    .view-exercise-details {
+        gap: 12px;
+    }
+
+    .view-detail-item {
+        padding: 12px 8px;
+    }
+
+    .detail-input {
+        padding: 10px 6px;
+        font-size: 14px;
+    }
+
+    .view-detail-value {
+        font-size: 18px;
     }
 }
 
