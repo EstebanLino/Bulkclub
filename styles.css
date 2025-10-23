@@ -55,42 +55,20 @@ header .subtitle {
     font-weight: 400;
 }
 
-/* Rotation Button (bottom) */
-.rotation-button-container {
-    margin-top: 32px;
-    padding: 20px 0;
-    text-align: center;
+/* Rotation Info Box */
+.rotation-info-box {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: rgba(127, 176, 105, 0.1);
+    border-left: 4px solid var(--workout-green);
+    border-radius: 8px;
 }
 
-.rotation-btn {
-    padding: 16px 32px;
-    background: white;
-    border: 2px solid var(--workout-green);
-    border-radius: 12px;
-    color: var(--workout-green);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.rotation-btn:hover {
-    background: var(--workout-green);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(127, 176, 105, 0.3);
-}
-
-.rotation-btn:active {
-    transform: translateY(0);
-}
-
-.rotation-btn.active {
-    background: var(--workout-green);
-    color: white;
+.rotation-info-box p {
+    font-size: 14px;
+    color: var(--text-dark);
+    line-height: 1.6;
+    margin: 0;
 }
 
 /* Week Navigation */
@@ -493,6 +471,57 @@ header .subtitle {
     color: var(--text-light);
 }
 
+/* Rotation Section */
+.rotation-section {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.rotation-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.rotation-icon {
+    font-size: 48px;
+}
+
+.rotation-message p {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.rotation-subtitle {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 16px;
+}
+
+.rotation-current-session {
+    margin-top: 24px;
+    padding: 20px;
+    background: var(--background);
+    border-radius: 12px;
+    max-width: 300px;
+}
+
+.rotation-current-session h4 {
+    font-size: 14px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.rotation-current-session .session-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--workout-green);
+}
+
 /* View Mode - Consultation */
 .view-mode {
     padding: 20px;
@@ -625,92 +654,6 @@ header .subtitle {
 .save-btn:active,
 .edit-btn:active {
     transform: translateY(0);
-}
-
-/* Rotation Config Modal */
-.rotation-config-content {
-    padding: 20px;
-}
-
-.config-description {
-    font-size: 14px;
-    color: var(--text-light);
-    margin-bottom: 24px;
-    line-height: 1.6;
-}
-
-.days-selector {
-    margin-bottom: 24px;
-}
-
-.days-selector h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 16px;
-}
-
-.days-checkboxes {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.day-checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px;
-    background: var(--background);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.day-checkbox-item:hover {
-    background: var(--border-light);
-}
-
-.day-checkbox-item input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    accent-color: var(--workout-green);
-}
-
-.day-checkbox-label {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text-dark);
-    cursor: pointer;
-    flex: 1;
-}
-
-.rotation-explanation {
-    padding: 16px;
-    background: var(--background);
-    border-radius: 12px;
-    border-left: 4px solid var(--workout-green);
-}
-
-.rotation-explanation h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 12px;
-}
-
-.rotation-explanation p {
-    font-size: 13px;
-    color: var(--text-light);
-    line-height: 1.6;
-    margin-bottom: 8px;
-}
-
-.rotation-explanation .example-text {
-    font-size: 12px;
-    font-style: italic;
-    opacity: 0.8;
 }
 
 /* Animations */
