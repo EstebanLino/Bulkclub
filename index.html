@@ -12,13 +12,21 @@
         <header>
             <h1>Mes Séances</h1>
             <p class="subtitle">Planifiez et suivez vos entraînements</p>
-            <button class="templates-btn" id="templatesBtn">
-                <span>⚙️</span> Gérer mes templates
-            </button>
+
+            <!-- Rotation Toggle -->
+            <div class="rotation-toggle-container">
+                <label class="rotation-toggle">
+                    <input type="checkbox" id="rotationCheckbox">
+                    <span class="rotation-label">Mode rotation</span>
+                </label>
+                <button class="settings-btn" id="settingsBtn" style="display: none;">
+                    ⚙️ Gérer les templates
+                </button>
+            </div>
         </header>
 
-        <!-- Week Navigation -->
-        <div class="week-navigation" id="weekNavigation">
+        <!-- Week Navigation (only visible in rotation mode) -->
+        <div class="week-navigation" id="weekNavigation" style="display: none;">
             <button class="week-nav-btn" id="prevWeek">←</button>
             <div class="week-info">
                 <span class="week-label">Semaine</span>
@@ -94,11 +102,11 @@
             </div>
         </div>
 
-        <!-- Templates Management Modal -->
+        <!-- Templates Modal (only for rotation mode) -->
         <div class="modal" id="templatesModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Mes Templates</h2>
+                    <h2>Templates de rotation</h2>
                     <button class="close-btn" id="closeTemplatesModal">&times;</button>
                 </div>
 
