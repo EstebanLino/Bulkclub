@@ -1,7 +1,7 @@
 /* Custom Font */
 @font-face {
-    font-family: 'Cocogoose Pro';
-    src: url('Cocogoose-Pro-Regular-trial.ttf') format('truetype');
+    font-family: 'Alte Haas Grotesk';
+    src: url('AlteHaasGroteskRegular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -36,7 +36,7 @@
 }
 
 body {
-    font-family: 'Cocogoose Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background-color: var(--background);
     color: var(--text-dark);
     line-height: 1.6;
@@ -75,8 +75,8 @@ header .subtitle {
 .rotation-info-box {
     margin-top: 24px;
     padding: 16px 20px;
-    background: rgba(127, 176, 105, 0.1);
-    border-left: 4px solid var(--workout-green);
+    background: hsla(211, 29%, 68%, 0.1);
+    border-left: 4px solid var(--primary-blue);
     border-radius: 8px;
 }
 
@@ -168,13 +168,32 @@ header .subtitle {
 .day-card:nth-child(7) { animation-delay: 0.35s; }
 
 .day-card.workout {
-    background: var(--workout-green);
+    background: var(--primary-blue);
     color: white;
+}
+
+.day-card.current-day {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px var(--shadow-strong);
+    border-color: var(--primary-blue);
+}
+
+.day-card.current-day .day-name {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.day-card.current-day .session-title {
+    font-size: 15px;
 }
 
 .day-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 16px var(--shadow-strong);
+}
+
+.day-card.current-day:hover {
+    transform: scale(1.08) translateY(-2px);
 }
 
 .day-card:active {
@@ -330,8 +349,8 @@ header .subtitle {
 }
 
 .session-name-input:focus {
-    border-color: var(--workout-green);
-    box-shadow: 0 0 0 3px rgba(127, 176, 105, 0.1);
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px hsla(211, 29%, 68%, 0.1);
 }
 
 .session-name-input::placeholder {
@@ -450,9 +469,9 @@ header .subtitle {
 }
 
 .add-exercise-btn:hover {
-    border-color: var(--workout-green);
-    color: var(--workout-green);
-    background: rgba(127, 176, 105, 0.05);
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+    background: hsla(211, 29%, 68%, 0.05);
 }
 
 .plus-icon {
@@ -660,9 +679,9 @@ header .subtitle {
 
 .save-btn:hover,
 .edit-btn:hover {
-    background: var(--workout-green-dark);
+    background: var(--blue-dark);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(127, 176, 105, 0.3);
+    box-shadow: 0 4px 12px hsla(211, 29%, 68%, 0.3);
 }
 
 .save-btn:active,
@@ -887,6 +906,15 @@ html {
     margin-right: 6px;
 }
 
+.rotation-icon-inline {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    vertical-align: middle;
+    margin-right: 4px;
+    display: inline-block;
+}
+
 /* ========================================
    NUTRITION PAGE
    ======================================== */
@@ -906,7 +934,7 @@ html {
     align-items: center;
     gap: 12px;
     padding: 16px 32px;
-    background: var(--workout-green);
+    background: var(--primary-blue);
     color: white;
     border: none;
     border-radius: 50px;
@@ -914,13 +942,13 @@ html {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(127, 176, 105, 0.3);
+    box-shadow: 0 4px 12px hsla(211, 29%, 68%, 0.3);
 }
 
 .profile-setup-btn:hover {
-    background: var(--workout-green-dark);
+    background: var(--blue-dark);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(127, 176, 105, 0.4);
+    box-shadow: 0 6px 16px hsla(211, 29%, 68%, 0.4);
 }
 
 .profile-setup-btn .icon {
@@ -958,14 +986,14 @@ html {
 
 .form-input:focus {
     outline: none;
-    border-color: var(--workout-green);
-    box-shadow: 0 0 0 3px rgba(127, 176, 105, 0.1);
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px hsla(211, 29%, 68%, 0.1);
 }
 
 .save-profile-btn {
     width: 100%;
     padding: 16px;
-    background: var(--workout-green);
+    background: var(--primary-blue);
     color: white;
     border: none;
     border-radius: 12px;
@@ -977,7 +1005,7 @@ html {
 }
 
 .save-profile-btn:hover {
-    background: var(--workout-green-dark);
+    background: var(--blue-dark);
     transform: translateY(-2px);
 }
 

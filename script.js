@@ -123,17 +123,24 @@ function renderWeekView() {
 
     const rotationActive = isRotationActive();
 
+    // Get current day of week (0 = Sunday, 1 = Monday, etc.)
+    const today = new Date().getDay();
+    const dayKeyArray = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const currentDayKey = dayKeyArray[today];
+
     Object.keys(dayNames).forEach(dayKey => {
         const dayData = workoutData.weeks[dayKey];
         let isWorkout = false;
         let sessionTitle = '';
+        let isRotated = false;
 
         // If rotation is active, ALL training days show rotated sessions
         if (rotationActive && (dayData.type === 'workout' || dayData.type === 'rotation')) {
             const rotatedSession = getRotatedSessionForDay(dayKey);
             if (rotatedSession) {
-                sessionTitle = `🔄 ${rotatedSession.name || 'Séance'}`;
+                sessionTitle = rotatedSession.name || 'Séance';
                 isWorkout = true;
+                isRotated = true;
             } else {
                 sessionTitle = 'Rotation (aucune séance)';
                 isWorkout = false;
@@ -148,15 +155,22 @@ function renderWeekView() {
         }
 
         const dayCard = document.createElement('div');
-        dayCard.className = `day-card ${isWorkout ? 'workout' : ''}`;
+        const isCurrentDay = dayKey === currentDayKey;
+        dayCard.className = `day-card ${isWorkout ? 'workout' : ''} ${isCurrentDay ? 'current-day' : ''}`;
         dayCard.dataset.day = dayKey;
+
+        // Add rotation icon if applicable
+        let titleContent = sessionTitle;
+        if (isRotated) {
+            titleContent = `<svg class="rotation-icon-inline"><use href="#icon-rotation"></use></svg>${sessionTitle}`;
+        }
 
         dayCard.innerHTML = `
             <div class="day-header">
                 <span class="day-name">${dayNames[dayKey]}</span>
                 <span class="day-indicator"></span>
             </div>
-            <div class="session-title">${sessionTitle}</div>
+            <div class="session-title">${titleContent}</div>
         `;
 
         dayCard.addEventListener('click', () => openModal(dayKey));
