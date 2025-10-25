@@ -1,3 +1,12 @@
+/* Custom Font */
+@font-face {
+    font-family: 'Cocogoose Pro';
+    src: url('Cocogoose-Pro-Regular-trial.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* Reset & Base Styles */
 * {
     margin: 0;
@@ -6,21 +15,28 @@
 }
 
 :root {
-    /* Color Palette - Natural & Minimalist */
-    --workout-green: #7FB069;
-    --workout-green-light: #9DC88D;
-    --workout-green-dark: #5A8C52;
-    --rest-white: #FFFFFF;
-    --background: #F8F9F8;
-    --text-dark: #2C3E2E;
-    --text-light: #6B7C6B;
-    --border-light: #E5E8E5;
-    --shadow: rgba(47, 62, 46, 0.08);
-    --shadow-strong: rgba(47, 62, 46, 0.15);
+    /* Color Palette - Blues & Off-White */
+    --primary-blue: hsl(211, 29%, 68%);      /* Bleu principal h211 s29 v68 */
+    --light-blue: hsl(210, 24%, 91%);        /* Bleu clair h210 s24 v91 */
+    --off-white: hsl(52, 3%, 97%);           /* Blanc cassé h52 s3 v97 */
+    --blue-dark: hsl(211, 29%, 50%);         /* Bleu foncé pour hover */
+    --blue-darker: hsl(211, 29%, 35%);       /* Bleu très foncé pour texte */
+
+    /* Aliases for backward compatibility */
+    --workout-green: var(--primary-blue);
+    --workout-green-light: var(--light-blue);
+    --workout-green-dark: var(--blue-dark);
+    --rest-white: var(--off-white);
+    --background: var(--off-white);
+    --text-dark: var(--blue-darker);
+    --text-light: var(--primary-blue);
+    --border-light: hsl(210, 20%, 85%);
+    --shadow: hsla(211, 29%, 50%, 0.08);
+    --shadow-strong: hsla(211, 29%, 50%, 0.15);
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Cocogoose Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background-color: var(--background);
     color: var(--text-dark);
     line-height: 1.6;
@@ -456,8 +472,10 @@ header .subtitle {
     gap: 12px;
 }
 
-.rest-icon {
-    font-size: 48px;
+.rest-icon-svg {
+    width: 48px;
+    height: 48px;
+    fill: var(--primary-blue);
 }
 
 .rest-message p {
@@ -482,10 +500,6 @@ header .subtitle {
     flex-direction: column;
     align-items: center;
     gap: 12px;
-}
-
-.rotation-icon {
-    font-size: 48px;
 }
 
 .rotation-message p {
@@ -854,8 +868,23 @@ html {
 .rotation-icon-svg {
     width: 48px;
     height: 48px;
-    fill: var(--workout-green);
+    fill: var(--primary-blue);
     margin-bottom: 12px;
+}
+
+.info-icon-inline {
+    width: 18px;
+    height: 18px;
+    fill: var(--primary-blue);
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.reset-icon {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    margin-right: 6px;
 }
 
 /* ========================================
@@ -971,6 +1000,8 @@ html {
 }
 
 .reset-day-btn {
+    display: inline-flex;
+    align-items: center;
     padding: 8px 16px;
     background: transparent;
     border: 2px solid var(--border-light);
@@ -982,8 +1013,8 @@ html {
 }
 
 .reset-day-btn:hover {
-    border-color: var(--workout-green);
-    color: var(--workout-green);
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
 }
 
 /* Macros Overview */
@@ -1026,11 +1057,11 @@ html {
 }
 
 .calories-fill {
-    background: linear-gradient(90deg, #FF6B6B, #FF8E53);
+    background: linear-gradient(90deg, var(--primary-blue), var(--light-blue));
 }
 
 .protein-fill {
-    background: linear-gradient(90deg, var(--workout-green), var(--workout-green-light));
+    background: linear-gradient(90deg, var(--blue-dark), var(--primary-blue));
 }
 
 .macro-values {

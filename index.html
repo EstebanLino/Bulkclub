@@ -14,14 +14,34 @@
             <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
         </symbol>
 
-        <!-- Apple Icon -->
+        <!-- Apple Icon - Realistic Apple Shape -->
         <symbol id="icon-apple" viewBox="0 0 24 24">
-            <path d="M12.5 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-3.5 6c-2.21 0-4 1.79-4 4 0 3.31 2.69 8 6 8s6-4.69 6-8c0-2.21-1.79-4-4-4-1.1 0-2 .45-2.5 1.18C9.5 8.45 8.6 8 7.5 8zm8 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
+            <!-- Leaf -->
+            <path d="M14 2c0 0 1 0.5 1.5 2c0.3 0.9 0.3 1.5 0.3 1.5s1-0.8 1.7-0.5c0.7 0.3 0.5 1.5 0.5 1.5s-1.5 0.5-2.5 0c-0.8-0.4-1.5-1.5-1.5-1.5z" fill="currentColor" opacity="0.7"/>
+            <!-- Apple Body -->
+            <path d="M12 6c-4 0-7 2.5-7 7c0 4.5 3 9 7 9s7-4.5 7-9c0-4.5-3-7-7-7z" fill="currentColor"/>
+            <!-- Highlight -->
+            <ellipse cx="9" cy="10" rx="2" ry="2.5" fill="currentColor" opacity="0.2"/>
         </symbol>
 
         <!-- Rotation Icon -->
         <symbol id="icon-rotation" viewBox="0 0 24 24">
             <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+        </symbol>
+
+        <!-- Leaf/Rest Icon -->
+        <symbol id="icon-rest" viewBox="0 0 24 24">
+            <path d="M12 2c-1 0-2 0.5-2.5 1C9 3.5 9 4 9 4.5c0 0 0 0.5-1 1.5c-1 1-2 2-2 4c0 2 1 3.5 2.5 4.5C7.5 15.5 7 16.5 7 18c0 2 1.5 4 5 4s5-2 5-4c0-1.5-0.5-2.5-1.5-3.5C17 13.5 18 12 18 10c0-2-1-3-2-4c-1-1-1-1.5-1-1.5c0-0.5 0-1-0.5-1.5C14 2.5 13 2 12 2z"/>
+        </symbol>
+
+        <!-- Info/Lightbulb Icon -->
+        <symbol id="icon-info" viewBox="0 0 24 24">
+            <path d="M12 2C11 2 10 2.5 10 3.5v0.8C8.2 5.1 7 6.9 7 9c0 1.9 1 3.6 2.5 4.5V17c0 0.6 0.4 1 1 1h3c0.6 0 1-0.4 1-1v-3.5C16 12.6 17 10.9 17 9c0-2.1-1.2-3.9-3-4.7V3.5C14 2.5 13 2 12 2zm-1.5 17v1c0 0.3 0.2 0.5 0.5 0.5h2c0.3 0 0.5-0.2 0.5-0.5v-1h-3z"/>
+        </symbol>
+
+        <!-- Refresh/Reset Icon -->
+        <symbol id="icon-refresh" viewBox="0 0 24 24">
+            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
         </symbol>
     </svg>
 
@@ -51,7 +71,10 @@
 
             <!-- Info box about rotation -->
             <div class="rotation-info-box" id="rotationInfoBox" style="display: none;">
-                <p>💡 <strong>Mode rotation activé :</strong> Toutes vos séances tournent automatiquement sur l'ensemble de vos jours d'entraînement chaque semaine.</p>
+                <p>
+                    <svg class="info-icon-inline"><use href="#icon-info"></use></svg>
+                    <strong>Mode rotation activé :</strong> Toutes vos séances tournent automatiquement sur l'ensemble de vos jours d'entraînement chaque semaine.
+                </p>
             </div>
         </div>
 
@@ -75,7 +98,10 @@
             <div class="daily-tracking" id="dailyTracking" style="display: none;">
                 <div class="daily-header">
                     <h3 id="dailyDate">Aujourd'hui</h3>
-                    <button class="reset-day-btn" id="resetDayBtn">🔄 Réinitialiser</button>
+                    <button class="reset-day-btn" id="resetDayBtn">
+                        <svg class="reset-icon"><use href="#icon-refresh"></use></svg>
+                        Réinitialiser
+                    </button>
                 </div>
 
                 <!-- Macros Overview -->
@@ -180,7 +206,7 @@
                         <!-- Rest Day Message -->
                     <div class="rest-section" id="restSection" style="display: none;">
                         <div class="rest-message">
-                            <span class="rest-icon">🌿</span>
+                            <svg class="rest-icon-svg"><use href="#icon-rest"></use></svg>
                             <p>Jour de repos</p>
                             <span class="rest-subtitle">Récupération et régénération</span>
                         </div>
