@@ -856,6 +856,7 @@ html {
     cursor: pointer;
     transition: all 0.3s ease;
     color: var(--text-light);
+    text-decoration: none;
 }
 
 .nav-item:hover {
@@ -863,7 +864,7 @@ html {
 }
 
 .nav-item.active {
-    background: var(--workout-green);
+    background: var(--primary-blue);
     color: white;
 }
 

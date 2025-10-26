@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition - Suivi Macros</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- SVG Icons (hidden) -->
+    <svg style="display: none;">
+        <!-- Dumbbell Icon -->
+        <symbol id="icon-dumbbell" viewBox="0 0 24 24">
+            <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
+        </symbol>
+
+        <!-- Apple Icon - Realistic Apple Shape -->
+        <symbol id="icon-apple" viewBox="0 0 24 24">
+            <!-- Leaf -->
+            <path d="M14 2c0 0 1 0.5 1.5 2c0.3 0.9 0.3 1.5 0.3 1.5s1-0.8 1.7-0.5c0.7 0.3 0.5 1.5 0.5 1.5s-1.5 0.5-2.5 0c-0.8-0.4-1.5-1.5-1.5-1.5z" fill="currentColor" opacity="0.7"/>
+            <!-- Apple Body -->
+            <path d="M12 6c-4 0-7 2.5-7 7c0 4.5 3 9 7 9s7-4.5 7-9c0-4.5-3-7-7-7z" fill="currentColor"/>
+            <!-- Highlight -->
+            <ellipse cx="9" cy="10" rx="2" ry="2.5" fill="currentColor" opacity="0.2"/>
+        </symbol>
+
+        <!-- Refresh/Reset Icon -->
+        <symbol id="icon-refresh" viewBox="0 0 24 24">
+            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+        </symbol>
+    </svg>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>Nutrition</h1>
+            <p class="subtitle">Suivez vos macros quotidiennes</p>
+        </header>
+
+        <!-- User Profile Section -->
+        <div class="nutrition-profile" id="nutritionProfile">
+            <button class="profile-setup-btn" id="profileSetupBtn">
+                <svg class="icon"><use href="#icon-apple"></use></svg>
+                Configurer mon profil
+            </button>
+        </div>
+
+        <!-- Daily Tracking Section -->
+        <div class="daily-tracking" id="dailyTracking" style="display: none;">
+            <div class="daily-header">
+                <h3 id="dailyDate">Aujourd'hui</h3>
+                <button class="reset-day-btn" id="resetDayBtn">
+                    <svg class="reset-icon"><use href="#icon-refresh"></use></svg>
+                    Réinitialiser
+                </button>
+            </div>
+
+            <!-- Macros Overview -->
+            <div class="macros-overview">
+                <div class="macro-card">
+                    <div class="macro-label">Calories</div>
+                    <div class="macro-progress">
+                        <div class="macro-bar">
+                            <div class="macro-bar-fill calories-fill" id="caloriesBar"></div>
+                        </div>
+                        <div class="macro-values">
+                            <span class="macro-current" id="caloriesCurrent">0</span>
+                            <span class="macro-separator">/</span>
+                            <span class="macro-target" id="caloriesTarget">0</span>
+                            <span class="macro-unit">kcal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="macro-card">
+                    <div class="macro-label">Protéines</div>
+                    <div class="macro-progress">
+                        <div class="macro-bar">
+                            <div class="macro-bar-fill protein-fill" id="proteinBar"></div>
+                        </div>
+                        <div class="macro-values">
+                            <span class="macro-current" id="proteinCurrent">0</span>
+                            <span class="macro-separator">/</span>
+                            <span class="macro-target" id="proteinTarget">0</span>
+                            <span class="macro-unit">g</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Add Section -->
+            <div class="quick-add-section">
+                <h3>Ajouter un repas</h3>
+                <div class="quick-add-inputs">
+                    <input type="number" id="addCalories" class="quick-input" placeholder="Calories" min="0" step="1">
+                    <input type="number" id="addProtein" class="quick-input" placeholder="Protéines (g)" min="0" step="0.1">
+                    <button class="add-meal-btn" id="addMealBtn">+ Ajouter</button>
+                </div>
+            </div>
+
+            <!-- Meal History -->
+            <div class="meal-history">
+                <h3>Historique du jour</h3>
+                <div class="meal-list" id="mealList">
+                    <!-- Meals will be added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Setup Modal -->
+        <div class="modal" id="profileModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Configuration du profil</h2>
+                    <button class="close-btn" id="closeProfileModal">&times;</button>
+                </div>
+
+                <div class="profile-form">
+                    <div class="form-group">
+                        <label for="userWeight">Poids (kg)</label>
+                        <input type="number" id="userWeight" class="form-input" placeholder="70" min="30" max="300" step="0.1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userHeight">Taille (cm)</label>
+                        <input type="number" id="userHeight" class="form-input" placeholder="175" min="100" max="250">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userAge">Âge</label>
+                        <input type="number" id="userAge" class="form-input" placeholder="25" min="15" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userGender">Sexe</label>
+                        <select id="userGender" class="form-input">
+                            <option value="male">Homme</option>
+                            <option value="female">Femme</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="activityLevel">Niveau d'activité</label>
+                        <select id="activityLevel" class="form-input">
+                            <option value="1.2">Sédentaire (peu ou pas d'exercice)</option>
+                            <option value="1.375">Légèrement actif (1-3 jours/semaine)</option>
+                            <option value="1.55" selected>Modérément actif (3-5 jours/semaine)</option>
+                            <option value="1.725">Très actif (6-7 jours/semaine)</option>
+                            <option value="1.9">Extrêmement actif (2x par jour)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="goal">Objectif</label>
+                        <select id="goal" class="form-input">
+                            <option value="cut">Sèche (perte de poids)</option>
+                            <option value="maintain">Maintien</option>
+                            <option value="bulk">Prise de masse (bulk)</option>
+                        </select>
+                    </div>
+
+                    <button class="save-profile-btn" id="saveProfileBtn">Calculer mes besoins</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="workout.html" class="nav-item">
+                <svg class="nav-icon"><use href="#icon-dumbbell"></use></svg>
+                <span class="nav-label">Workout</span>
+            </a>
+            <a href="nutrition.html" class="nav-item active">
+                <svg class="nav-icon"><use href="#icon-apple"></use></svg>
+                <span class="nav-label">Nutrition</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="nutrition.js"></script>
+</body>
+</html>
