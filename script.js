@@ -191,8 +191,8 @@ function openModal(dayKey) {
     // Set session type
     updateSessionType(dayData.type);
 
-    // If rotation is active and this is a training day, show rotated session
-    if (rotationActive && (dayData.type === 'workout' || dayData.type === 'rotation')) {
+    // Handle rotation days specifically (not workout template days)
+    if (rotationActive && dayData.type === 'rotation') {
         const rotatedSession = getRotatedSessionForDay(dayKey);
         const sessionDisplay = document.getElementById('rotationCurrentSession');
 
