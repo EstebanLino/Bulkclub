@@ -3,155 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workout - Mes Séances</title>
+    <title>Workout — Mes Séances</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- SVG Icons (hidden) -->
     <svg style="display: none;">
-        <!-- Dumbbell Icon -->
         <symbol id="icon-dumbbell" viewBox="0 0 24 24">
             <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
         </symbol>
-
-        <!-- Apple Icon - Realistic Apple Shape -->
         <symbol id="icon-apple" viewBox="0 0 24 24">
-            <!-- Leaf -->
             <path d="M14 2c0 0 1 0.5 1.5 2c0.3 0.9 0.3 1.5 0.3 1.5s1-0.8 1.7-0.5c0.7 0.3 0.5 1.5 0.5 1.5s-1.5 0.5-2.5 0c-0.8-0.4-1.5-1.5-1.5-1.5z" fill="currentColor" opacity="0.7"/>
-            <!-- Apple Body -->
             <path d="M12 6c-4 0-7 2.5-7 7c0 4.5 3 9 7 9s7-4.5 7-9c0-4.5-3-7-7-7z" fill="currentColor"/>
-            <!-- Highlight -->
             <ellipse cx="9" cy="10" rx="2" ry="2.5" fill="currentColor" opacity="0.2"/>
         </symbol>
-
-        <!-- Rotation Icon -->
         <symbol id="icon-rotation" viewBox="0 0 24 24">
             <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
         </symbol>
-
-        <!-- Leaf/Rest Icon -->
         <symbol id="icon-rest" viewBox="0 0 24 24">
             <path d="M12 2c-1 0-2 0.5-2.5 1C9 3.5 9 4 9 4.5c0 0 0 0.5-1 1.5c-1 1-2 2-2 4c0 2 1 3.5 2.5 4.5C7.5 15.5 7 16.5 7 18c0 2 1.5 4 5 4s5-2 5-4c0-1.5-0.5-2.5-1.5-3.5C17 13.5 18 12 18 10c0-2-1-3-2-4c-1-1-1-1.5-1-1.5c0-0.5 0-1-0.5-1.5C14 2.5 13 2 12 2z"/>
         </symbol>
-
-        <!-- Info/Lightbulb Icon -->
         <symbol id="icon-info" viewBox="0 0 24 24">
             <path d="M12 2C11 2 10 2.5 10 3.5v0.8C8.2 5.1 7 6.9 7 9c0 1.9 1 3.6 2.5 4.5V17c0 0.6 0.4 1 1 1h3c0.6 0 1-0.4 1-1v-3.5C16 12.6 17 10.9 17 9c0-2.1-1.2-3.9-3-4.7V3.5C14 2.5 13 2 12 2zm-1.5 17v1c0 0.3 0.2 0.5 0.5 0.5h2c0.3 0 0.5-0.2 0.5-0.5v-1h-3z"/>
+        </symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+            <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.04-.7-1.62-.94L14.4 2.81a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.493.493 0 00-.59.22l-1.92 3.32a.49.49 0 00.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.13.22.39.31.59.22l2.39-.96c.5.38 1.04.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 00-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 018.4 12 3.6 3.6 0 0112 8.4a3.6 3.6 0 013.6 3.6 3.6 3.6 0 01-3.6 3.6z"/>
         </symbol>
     </svg>
 
     <div class="container">
-        <!-- Header -->
         <header>
             <h1>Mes Séances</h1>
-            <p class="subtitle" id="todayDateLabel">Planifiez et suivez vos entraînements</p>
+            <p class="subtitle" id="todayDateLabel">Planifiez vos entraînements</p>
         </header>
 
-        <!-- Today Hero - dominant card showing today's session -->
-        <section class="today-hero" id="todayHero">
-            <!-- Populated by JavaScript -->
-        </section>
-
-        <!-- Week Section header -->
-        <div class="section-header">
-            <h2 class="section-title">Cette semaine</h2>
-            <div class="week-navigation" id="weekNavigation">
-                <button class="week-nav-btn" id="prevWeek" aria-label="Semaine précédente">←</button>
-                <div class="week-info">
-                    <span class="week-label">Sem.</span>
-                    <span class="week-number" id="weekNumber">1</span>
-                </div>
-                <button class="week-nav-btn" id="nextWeek" aria-label="Semaine suivante">→</button>
+        <!-- Quick controls: settings + week navigation -->
+        <div class="quick-controls">
+            <button class="control-btn" id="settingsBtn" type="button" aria-expanded="false">
+                <svg class="control-icon"><use href="#icon-settings"></use></svg>
+                <span>Réglages</span>
+            </button>
+            <div class="week-nav-inline">
+                <button class="week-nav-btn" id="prevWeek" type="button" aria-label="Semaine précédente">←</button>
+                <span class="week-range" id="weekRangeLabel">Cette semaine</span>
+                <button class="week-nav-btn" id="nextWeek" type="button" aria-label="Semaine suivante">→</button>
             </div>
         </div>
 
-        <!-- Week View -->
+        <!-- Settings panel (collapsed by default) -->
+        <div class="settings-panel" id="settingsPanel" hidden>
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="setting-title">Rotation automatique</div>
+                    <div class="setting-help">Vos séances tournent automatiquement chaque semaine sur tous vos jours d'entraînement. Activez si vous faites Push/Pull/Legs en alternance.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="rotationToggle">
+                    <span class="switch-track"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Day cards (accordion) -->
         <section class="week-view" id="weekView">
-            <!-- Days will be generated by JavaScript -->
+            <!-- Generated by JavaScript -->
         </section>
-
-        <!-- Info box about rotation -->
-        <div class="rotation-info-box" id="rotationInfoBox" style="display: none;">
-            <p>
-                <svg class="info-icon-inline"><use href="#icon-info"></use></svg>
-                <strong>Mode rotation activé :</strong> Toutes vos séances tournent automatiquement sur l'ensemble de vos jours d'entraînement chaque semaine.
-            </p>
-        </div>
-
-        <!-- Session Detail Modal -->
-        <div class="modal" id="sessionModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="modalDay">Lundi</h2>
-                    <button class="close-btn" id="closeModal">&times;</button>
-                </div>
-
-                <div class="session-type-toggle" id="sessionTypeToggle">
-                    <button class="toggle-btn active" data-type="workout">Séance</button>
-                    <button class="toggle-btn" data-type="rest">Repos</button>
-                    <button class="toggle-btn" data-type="rotation">Rotation</button>
-                </div>
-
-                <!-- VIEW MODE - Consultation -->
-                <div class="view-mode" id="viewMode" style="display: none;">
-                    <div class="view-session-name" id="viewSessionName"></div>
-
-                    <div class="view-exercises-container" id="viewExercisesContainer">
-                        <!-- Exercises in view mode will be displayed here -->
-                    </div>
-                </div>
-
-                <!-- EDIT MODE - Modification -->
-                <div class="edit-mode" id="editMode">
-                    <!-- Workout Section -->
-                    <div class="workout-section" id="workoutSection">
-                        <div class="session-name-container">
-                            <input
-                                type="text"
-                                id="sessionName"
-                                class="session-name-input"
-                                placeholder="Nom de la séance (ex: Push, Pull, Legs...)"
-                            >
-                        </div>
-
-                        <div class="exercises-container" id="exercisesContainer">
-                            <!-- Exercises will be added here -->
-                        </div>
-
-                        <button class="add-exercise-btn" id="addExerciseBtn">
-                            <span class="plus-icon">+</span>
-                            Ajouter un exercice
-                        </button>
-                    </div>
-
-                    <!-- Rest Day Message -->
-                    <div class="rest-section" id="restSection" style="display: none;">
-                        <div class="rest-message">
-                            <svg class="rest-icon-svg"><use href="#icon-rest"></use></svg>
-                            <p>Jour de repos</p>
-                            <span class="rest-subtitle">Récupération et régénération</span>
-                        </div>
-                    </div>
-
-                    <!-- Rotation Message -->
-                    <div class="rotation-section" id="rotationSection" style="display: none;">
-                        <div class="rotation-message">
-                            <svg class="rotation-icon-svg"><use href="#icon-rotation"></use></svg>
-                            <p>Rotation automatique</p>
-                            <span class="rotation-subtitle">Toutes les séances tournent sur vos jours d'entraînement</span>
-                            <div class="rotation-current-session" id="rotationCurrentSession">
-                                <!-- Will show current week's session -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="edit-btn" id="editBtn" style="display: none;">Modifier</button>
-                    <button class="save-btn" id="saveBtn">Enregistrer</button>
-                </div>
-            </div>
-        </div>
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">

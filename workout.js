@@ -1,45 +1,84 @@
-// Workout Tracker App - Main JavaScript
+// ============================================================================
+// Workout Tracker — inline accordion edition
+// One concept per screen, auto-save, rotation as a global setting.
+// ============================================================================
 
-// Data Structure
 let workoutData = {
-    // Basic weekly structure - each day can be: 'workout', 'rest', or 'rotation'
     weeks: {
-        monday: { type: 'rest', name: '', exercises: [] },
-        tuesday: { type: 'rest', name: '', exercises: [] },
+        monday:    { type: 'rest', name: '', exercises: [] },
+        tuesday:   { type: 'rest', name: '', exercises: [] },
         wednesday: { type: 'rest', name: '', exercises: [] },
-        thursday: { type: 'rest', name: '', exercises: [] },
-        friday: { type: 'rest', name: '', exercises: [] },
-        saturday: { type: 'rest', name: '', exercises: [] },
-        sunday: { type: 'rest', name: '', exercises: [] }
+        thursday:  { type: 'rest', name: '', exercises: [] },
+        friday:    { type: 'rest', name: '', exercises: [] },
+        saturday:  { type: 'rest', name: '', exercises: [] },
+        sunday:    { type: 'rest', name: '', exercises: [] }
     },
-    // Current week number for rotation
+    settings: {
+        rotationActive: false
+    },
     currentWeek: 1
 };
 
-// Day names in French
 const dayNames = {
-    monday: 'Lundi',
-    tuesday: 'Mardi',
-    wednesday: 'Mercredi',
-    thursday: 'Jeudi',
-    friday: 'Vendredi',
-    saturday: 'Samedi',
-    sunday: 'Dimanche'
+    monday: 'Lundi', tuesday: 'Mardi', wednesday: 'Mercredi',
+    thursday: 'Jeudi', friday: 'Vendredi', saturday: 'Samedi', sunday: 'Dimanche'
 };
 
-// Day key order (Monday-first) used to compute calendar dates for the displayed week
 const dayKeyOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-// Compute the Monday-anchored date for each day key of the currently displayed week.
-// Week 1 = current real-life week. Navigating weeks shifts dates by 7 days.
+// Days currently expanded in the accordion (persisted within session)
+const expandedDays = new Set();
+
+// ============================================================================
+// Bootstrap
+// ============================================================================
+function init() {
+    loadFromLocalStorage();
+    migrateLegacyData();
+
+    // Open today's card by default on the current week
+    if (workoutData.currentWeek === 1) {
+        expandedDays.add(getTodayKey());
+    }
+
+    renderHeader();
+    renderRotationToggle();
+    renderWeekView();
+    attachListeners();
+}
+
+// One-shot migration from the old per-day rotation type to a global setting
+function migrateLegacyData() {
+    if (!workoutData.settings) {
+        workoutData.settings = { rotationActive: false };
+    }
+    let foundLegacyRotation = false;
+    Object.keys(workoutData.weeks).forEach(key => {
+        if (workoutData.weeks[key].type === 'rotation') {
+            workoutData.weeks[key].type = 'workout';
+            foundLegacyRotation = true;
+        }
+    });
+    if (foundLegacyRotation) {
+        workoutData.settings.rotationActive = true;
+        save();
+    }
+}
+
+// ============================================================================
+// Date helpers
+// ============================================================================
+function getTodayKey() {
+    const idx = (new Date().getDay() + 6) % 7;
+    return dayKeyOrder[idx];
+}
+
 function getDateForDayKey(dayKey) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    // JS getDay(): Sunday=0..Saturday=6 — convert to Monday-first index (Mon=0..Sun=6)
     const todayIdx = (today.getDay() + 6) % 7;
     const monday = new Date(today);
     monday.setDate(today.getDate() - todayIdx);
-
     const weekOffset = (workoutData.currentWeek - 1) * 7;
     const targetIdx = dayKeyOrder.indexOf(dayKey);
     const date = new Date(monday);
@@ -51,670 +90,461 @@ function formatShortDate(date) {
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).replace('.', '');
 }
 
-// Current editing day
-let currentDay = null;
-
-// Current mode: 'view' or 'edit'
-let currentMode = 'edit';
-
-// Initialize App
-function initApp() {
-    loadFromLocalStorage();
-
-    // Update week number display
-    document.getElementById('weekNumber').textContent = workoutData.currentWeek;
-
-    // Render week view
-    renderWeekView();
-
-    // Check if any day uses rotation
-    const hasRotation = Object.values(workoutData.weeks).some(day => day.type === 'rotation');
-    if (hasRotation) {
-        document.getElementById('rotationInfoBox').style.display = 'block';
-    }
-
-    attachEventListeners();
-}
-
-// Check if rotation mode is active
-function isRotationActive() {
-    return Object.values(workoutData.weeks).some(day => day.type === 'rotation');
-}
-
-// Get all workout sessions (template sessions to rotate)
+// ============================================================================
+// Rotation logic
+// ============================================================================
 function getWorkoutSessions() {
     const sessions = [];
-    Object.keys(dayNames).forEach(dayKey => {
-        const dayData = workoutData.weeks[dayKey];
-        if (dayData.type === 'workout' && (dayData.name || dayData.exercises.length > 0)) {
-            sessions.push({
-                day: dayKey,
-                name: dayData.name,
-                exercises: dayData.exercises
-            });
+    dayKeyOrder.forEach(key => {
+        const d = workoutData.weeks[key];
+        if (d.type === 'workout' && (d.name || (d.exercises && d.exercises.length > 0))) {
+            sessions.push({ day: key, name: d.name, exercises: d.exercises });
         }
     });
     return sessions;
 }
 
-// Get all training days (workout + rotation days, excluding rest days)
 function getTrainingDays() {
-    return Object.keys(dayNames).filter(key => {
-        const dayData = workoutData.weeks[key];
-        return dayData.type === 'workout' || dayData.type === 'rotation';
+    return dayKeyOrder.filter(key => workoutData.weeks[key].type === 'workout');
+}
+
+function getRotatedSessionForDay(dayKey) {
+    const sessions = getWorkoutSessions();
+    if (sessions.length === 0) return null;
+    const trainingDays = getTrainingDays();
+    const dayIdx = trainingDays.indexOf(dayKey);
+    if (dayIdx === -1) return null;
+    const total = trainingDays.length;
+    const sCount = sessions.length;
+    const offset = ((workoutData.currentWeek - 1) * total) % sCount;
+    return sessions[(offset + dayIdx) % sCount];
+}
+
+// Resolve what to display for a given day (handles rotation transparently)
+function resolveDayDisplay(dayKey) {
+    const dayData = workoutData.weeks[dayKey];
+    if (dayData.type === 'rest') {
+        return { type: 'rest', sessionName: '', exerciseCount: 0, isRotated: false };
+    }
+    if (workoutData.settings.rotationActive) {
+        const rotated = getRotatedSessionForDay(dayKey);
+        if (rotated) {
+            return {
+                type: 'workout',
+                sessionName: rotated.name || 'Séance',
+                exerciseCount: rotated.exercises ? rotated.exercises.length : 0,
+                isRotated: true,
+                rotatedFromDay: rotated.day
+            };
+        }
+    }
+    return {
+        type: 'workout',
+        sessionName: dayData.name || 'Séance',
+        exerciseCount: dayData.exercises ? dayData.exercises.length : 0,
+        isRotated: false
+    };
+}
+
+// ============================================================================
+// Rendering
+// ============================================================================
+function renderHeader() {
+    const today = new Date();
+    const longStr = today.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    document.getElementById('todayDateLabel').textContent =
+        longStr.charAt(0).toUpperCase() + longStr.slice(1);
+}
+
+function renderRotationToggle() {
+    document.getElementById('rotationToggle').checked = workoutData.settings.rotationActive;
+}
+
+function updateWeekRangeLabel() {
+    const monday = getDateForDayKey('monday');
+    const sunday = getDateForDayKey('sunday');
+    const range = `${formatShortDate(monday)} → ${formatShortDate(sunday)}`;
+    let label;
+    if (workoutData.currentWeek === 1) {
+        label = `Cette semaine · ${range}`;
+    } else if (workoutData.currentWeek === 2) {
+        label = `Semaine prochaine · ${range}`;
+    } else if (workoutData.currentWeek > 2) {
+        label = `Sem. +${workoutData.currentWeek - 1} · ${range}`;
+    } else {
+        label = range;
+    }
+    document.getElementById('weekRangeLabel').textContent = label;
+    document.getElementById('prevWeek').disabled = workoutData.currentWeek <= 1;
+}
+
+function renderWeekView() {
+    updateWeekRangeLabel();
+    const view = document.getElementById('weekView');
+    view.innerHTML = '';
+
+    const todayKey = getTodayKey();
+    const showTodayHighlight = workoutData.currentWeek === 1;
+
+    dayKeyOrder.forEach(dayKey => {
+        const isToday = showTodayHighlight && dayKey === todayKey;
+        view.appendChild(createDayCard(dayKey, isToday));
     });
 }
 
-// Get rotated session for a day based on current week
-// When rotation is active, ALL training days (workout + rotation) rotate through sessions
-function getRotatedSessionForDay(dayKey) {
-    if (!isRotationActive()) {
-        return null;
-    }
+function createDayCard(dayKey, isToday) {
+    const display = resolveDayDisplay(dayKey);
+    const isExpanded = expandedDays.has(dayKey);
+    const dateStr = formatShortDate(getDateForDayKey(dayKey));
 
-    const workoutSessions = getWorkoutSessions();
-    if (workoutSessions.length === 0) {
-        return null;
-    }
+    const article = document.createElement('article');
+    const classes = ['day-card', display.type];
+    if (isToday) classes.push('today');
+    if (isExpanded) classes.push('expanded');
+    article.className = classes.join(' ');
+    article.dataset.day = dayKey;
 
-    const trainingDays = getTrainingDays();
-    if (trainingDays.length === 0) {
-        return null;
-    }
-
-    // Find the index of the current day in training days
-    const dayIndex = trainingDays.indexOf(dayKey);
-    if (dayIndex === -1) {
-        return null;
-    }
-
-    // Calculate which session should be shown this week
-    const sessionCount = workoutSessions.length;
-    const totalTrainingDays = trainingDays.length;
-    const weekOffset = ((workoutData.currentWeek - 1) * totalTrainingDays) % sessionCount;
-    const sessionIndex = (weekOffset + dayIndex) % sessionCount;
-
-    return workoutSessions[sessionIndex];
-}
-
-// Resolve display info for a given day, taking rotation into account
-function resolveDayDisplay(dayKey) {
-    const dayData = workoutData.weeks[dayKey];
-    const rotationActive = isRotationActive();
-    let isWorkout = false;
-    let isRotated = false;
-    let sessionTitle = '';
-    let exerciseCount = 0;
-
-    if (rotationActive && (dayData.type === 'workout' || dayData.type === 'rotation')) {
-        const rotatedSession = getRotatedSessionForDay(dayKey);
-        if (rotatedSession) {
-            sessionTitle = rotatedSession.name || 'Séance';
-            exerciseCount = rotatedSession.exercises ? rotatedSession.exercises.length : 0;
-            isWorkout = true;
-            isRotated = true;
-        } else {
-            sessionTitle = 'Rotation (aucune séance)';
-            isWorkout = false;
+    const summaryParts = [];
+    if (display.type === 'workout') {
+        summaryParts.push(escapeHTML(display.sessionName));
+        if (display.exerciseCount > 0) {
+            summaryParts.push(`${display.exerciseCount} ex.`);
         }
-    } else if (dayData.type === 'workout') {
-        sessionTitle = dayData.name || 'Séance d\'entraînement';
-        exerciseCount = dayData.exercises ? dayData.exercises.length : 0;
-        isWorkout = true;
-    } else if (dayData.type === 'rest') {
-        sessionTitle = 'Jour de repos';
-        isWorkout = false;
+    } else {
+        summaryParts.push('Repos');
     }
+    const summaryText = summaryParts.join(' · ');
+    const rotationIcon = display.isRotated
+        ? '<svg class="rotation-icon-inline"><use href="#icon-rotation"></use></svg>'
+        : '';
+    const todayBadge = isToday ? '<span class="today-badge">Aujourd\'hui</span>' : '';
 
-    return { isWorkout, isRotated, sessionTitle, exerciseCount };
+    article.innerHTML = `
+        <button class="day-card-header" type="button" data-action="toggle">
+            <div class="day-card-info">
+                <div class="day-card-name">
+                    <span class="day-name">${dayNames[dayKey]}</span>
+                    <span class="day-date">${dateStr}</span>
+                    ${todayBadge}
+                </div>
+                <span class="day-card-summary">${rotationIcon}${summaryText}</span>
+            </div>
+            <span class="day-card-chevron" aria-hidden="true">▾</span>
+        </button>
+        <div class="day-card-body">
+            <div class="day-body-content">
+                ${createDayBodyHTML(dayKey, display)}
+            </div>
+        </div>
+    `;
+    return article;
 }
 
-// Render the "Today" hero card and the date subtitle
-function renderTodayHero() {
-    const heroEl = document.getElementById('todayHero');
-    const dateLabel = document.getElementById('todayDateLabel');
-    if (!heroEl) return;
+function createDayBodyHTML(dayKey, display) {
+    const dayData = workoutData.weeks[dayKey];
+    const isWorkout = dayData.type === 'workout';
 
-    const today = new Date();
-    const todayIdx = (today.getDay() + 6) % 7;
-    const todayKey = dayKeyOrder[todayIdx];
-    const fullDate = today.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    return `
+        <div class="type-toggle" role="tablist">
+            <button class="toggle-btn ${dayData.type === 'rest' ? 'active' : ''}"
+                    type="button" data-type="rest" data-day="${dayKey}">Repos</button>
+            <button class="toggle-btn ${dayData.type === 'workout' ? 'active' : ''}"
+                    type="button" data-type="workout" data-day="${dayKey}">Entraînement</button>
+        </div>
+        ${isWorkout ? createWorkoutBodyHTML(dayKey, display) : createRestBodyHTML()}
+    `;
+}
 
-    if (dateLabel) {
-        dateLabel.textContent = fullDate.charAt(0).toUpperCase() + fullDate.slice(1);
-    }
+function createWorkoutBodyHTML(dayKey, display) {
+    const dayData = workoutData.weeks[dayKey];
+    const rotationActive = workoutData.settings.rotationActive;
 
-    // Only show hero session for the displayed week if it matches the current real week
-    const showCurrent = workoutData.currentWeek === 1;
-    const display = showCurrent ? resolveDayDisplay(todayKey) : null;
-
-    if (!display) {
-        heroEl.innerHTML = `
-            <div class="today-hero-card other-week">
-                <div class="today-eyebrow">Semaine ${workoutData.currentWeek}</div>
-                <div class="today-session-name">Programmation à venir</div>
-                <div class="today-cta-text">Sélectionnez un jour ci-dessous</div>
+    let rotationBanner = '';
+    if (rotationActive && display.isRotated) {
+        const fromDayName = display.rotatedFromDay && display.rotatedFromDay !== dayKey
+            ? ` (depuis ${dayNames[display.rotatedFromDay]})`
+            : '';
+        rotationBanner = `
+            <div class="rotation-banner">
+                <svg class="info-icon-inline"><use href="#icon-info"></use></svg>
+                <span>Rotation active · cette semaine vous faites <strong>${escapeHTML(display.sessionName)}</strong>${fromDayName}.</span>
             </div>
         `;
+    }
+
+    const exercisesHTML = dayData.exercises.length === 0
+        ? '<p class="exercises-empty">Aucun exercice. Cliquez ci-dessous pour ajouter.</p>'
+        : dayData.exercises.map((ex, i) => createExerciseHTML(ex, i, dayKey)).join('');
+
+    return `
+        ${rotationBanner}
+        <div class="session-name-container">
+            <input type="text" class="session-name-input" data-day="${dayKey}"
+                   placeholder="Nom de la séance (ex: Push, Pull, Legs)"
+                   value="${escapeHTML(dayData.name || '')}">
+        </div>
+        <div class="exercises-container" data-day="${dayKey}">
+            ${exercisesHTML}
+        </div>
+        <button class="add-exercise-btn" type="button" data-action="add-exercise" data-day="${dayKey}">
+            <span class="plus-icon">+</span> Ajouter un exercice
+        </button>
+    `;
+}
+
+function createRestBodyHTML() {
+    return `
+        <div class="rest-message-inline">
+            <svg class="rest-icon-svg"><use href="#icon-rest"></use></svg>
+            <p>Jour de repos</p>
+            <span class="rest-subtitle">Récupération et régénération</span>
+        </div>
+    `;
+}
+
+function createExerciseHTML(exercise, index, dayKey) {
+    return `
+        <div class="exercise-card" data-day="${dayKey}" data-index="${index}">
+            <div class="exercise-header">
+                <input type="text" class="exercise-name-input"
+                       placeholder="Nom de l'exercice"
+                       value="${escapeHTML(exercise.name || '')}"
+                       data-field="name">
+                <button class="delete-exercise-btn" type="button"
+                        data-action="delete-exercise"
+                        aria-label="Supprimer l'exercice">×</button>
+            </div>
+            <div class="exercise-details">
+                <div class="detail-group">
+                    <label class="detail-label">Poids (kg)</label>
+                    <input type="number" class="detail-input" data-field="weight"
+                           placeholder="0" value="${exercise.weight || ''}" min="0" step="0.5">
+                </div>
+                <div class="detail-group">
+                    <label class="detail-label">Séries</label>
+                    <input type="number" class="detail-input" data-field="sets"
+                           placeholder="0" value="${exercise.sets || ''}" min="1">
+                </div>
+                <div class="detail-group">
+                    <label class="detail-label">Reps</label>
+                    <input type="number" class="detail-input" data-field="reps"
+                           placeholder="0" value="${exercise.reps || ''}" min="1">
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function escapeHTML(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+}
+
+// Replace a single day card while keeping accordion state
+function replaceDayCard(dayKey) {
+    const oldCard = document.querySelector(`.day-card[data-day="${dayKey}"]`);
+    if (!oldCard) return;
+    const wasFocusedField = document.activeElement &&
+        oldCard.contains(document.activeElement) ? document.activeElement.dataset.field : null;
+
+    const todayKey = getTodayKey();
+    const isToday = workoutData.currentWeek === 1 && dayKey === todayKey;
+    const newCard = createDayCard(dayKey, isToday);
+    oldCard.replaceWith(newCard);
+
+    // Re-focus first input if we were typing
+    if (wasFocusedField) {
+        const newInput = newCard.querySelector(`[data-field="${wasFocusedField}"]`);
+        if (newInput) newInput.focus();
+    }
+}
+
+// Lighter update — only refresh the summary in the header without rerendering body
+function refreshDayCardSummary(dayKey) {
+    const card = document.querySelector(`.day-card[data-day="${dayKey}"]`);
+    if (!card) return;
+    const display = resolveDayDisplay(dayKey);
+    const summaryEl = card.querySelector('.day-card-summary');
+    if (!summaryEl) return;
+    const parts = display.type === 'workout'
+        ? [escapeHTML(display.sessionName), display.exerciseCount > 0 ? `${display.exerciseCount} ex.` : null].filter(Boolean)
+        : ['Repos'];
+    const rotationIcon = display.isRotated
+        ? '<svg class="rotation-icon-inline"><use href="#icon-rotation"></use></svg>'
+        : '';
+    summaryEl.innerHTML = rotationIcon + parts.join(' · ');
+    card.classList.toggle('workout', display.type === 'workout');
+    card.classList.toggle('rest', display.type === 'rest');
+}
+
+// When rotation is toggled, summaries of *all* training days may change
+function refreshAllSummaries() {
+    dayKeyOrder.forEach(refreshDayCardSummary);
+}
+
+// ============================================================================
+// Event handling (delegated)
+// ============================================================================
+function attachListeners() {
+    // Settings panel toggle
+    document.getElementById('settingsBtn').addEventListener('click', toggleSettingsPanel);
+    document.getElementById('rotationToggle').addEventListener('change', e => {
+        workoutData.settings.rotationActive = e.target.checked;
+        save();
+        refreshAllSummaries();
+        // Re-render bodies of currently expanded days so banners update
+        Array.from(expandedDays).forEach(replaceDayCard);
+    });
+
+    // Week navigation
+    document.getElementById('prevWeek').addEventListener('click', () => {
+        if (workoutData.currentWeek > 1) {
+            workoutData.currentWeek--;
+            save();
+            // Collapse all when switching weeks (today might no longer apply)
+            expandedDays.clear();
+            renderWeekView();
+        }
+    });
+    document.getElementById('nextWeek').addEventListener('click', () => {
+        workoutData.currentWeek++;
+        save();
+        expandedDays.clear();
+        renderWeekView();
+    });
+
+    // Delegated event handling for the week view
+    const weekView = document.getElementById('weekView');
+    weekView.addEventListener('click', handleWeekViewClick);
+    weekView.addEventListener('input', handleWeekViewInput);
+}
+
+function toggleSettingsPanel() {
+    const panel = document.getElementById('settingsPanel');
+    const btn = document.getElementById('settingsBtn');
+    const opening = panel.hidden;
+    panel.hidden = !opening;
+    btn.classList.toggle('active', opening);
+    btn.setAttribute('aria-expanded', String(opening));
+}
+
+function handleWeekViewClick(e) {
+    // Toggle accordion expand/collapse
+    const headerBtn = e.target.closest('[data-action="toggle"]');
+    if (headerBtn) {
+        const card = headerBtn.closest('.day-card');
+        const day = card.dataset.day;
+        if (expandedDays.has(day)) {
+            expandedDays.delete(day);
+            card.classList.remove('expanded');
+        } else {
+            expandedDays.add(day);
+            card.classList.add('expanded');
+        }
         return;
     }
 
-    const { isWorkout, isRotated, sessionTitle, exerciseCount } = display;
-    const rotationBadge = isRotated
-        ? `<svg class="rotation-icon-inline"><use href="#icon-rotation"></use></svg>`
-        : '';
-    const meta = isWorkout && exerciseCount > 0
-        ? `<div class="today-meta">${exerciseCount} exercice${exerciseCount > 1 ? 's' : ''}</div>`
-        : '';
-    const cta = isWorkout ? 'Voir la séance' : 'Détails';
-
-    heroEl.innerHTML = `
-        <div class="today-hero-card ${isWorkout ? 'workout' : 'rest'}" data-day="${todayKey}">
-            <div class="today-eyebrow">Aujourd'hui · ${dayNames[todayKey]}</div>
-            <div class="today-session-name">${rotationBadge}${sessionTitle}</div>
-            ${meta}
-            <div class="today-cta-row">
-                <span class="today-cta-text">${cta}</span>
-                <span class="today-cta-arrow">→</span>
-            </div>
-        </div>
-    `;
-
-    heroEl.querySelector('.today-hero-card').addEventListener('click', () => openModal(todayKey));
-}
-
-// Render Week View
-function renderWeekView() {
-    const weekView = document.getElementById('weekView');
-    weekView.innerHTML = '';
-
-    // Update week number
-    document.getElementById('weekNumber').textContent = workoutData.currentWeek;
-
-    // Render today hero first
-    renderTodayHero();
-
-    // Get current day of week (Monday-first index)
-    const todayIdx = (new Date().getDay() + 6) % 7;
-    const currentDayKey = dayKeyOrder[todayIdx];
-    const showTodayHighlight = workoutData.currentWeek === 1;
-
-    Object.keys(dayNames).forEach(dayKey => {
-        const { isWorkout, isRotated, sessionTitle } = resolveDayDisplay(dayKey);
-        const isCurrentDay = showTodayHighlight && dayKey === currentDayKey;
-        const dateStr = formatShortDate(getDateForDayKey(dayKey));
-
-        const dayCard = document.createElement('div');
-        dayCard.className = `day-card ${isWorkout ? 'workout' : ''} ${isCurrentDay ? 'current-day' : ''}`;
-        dayCard.dataset.day = dayKey;
-
-        const titleContent = isRotated
-            ? `<svg class="rotation-icon-inline"><use href="#icon-rotation"></use></svg>${sessionTitle}`
-            : sessionTitle;
-
-        dayCard.innerHTML = `
-            <div class="day-header">
-                <div class="day-heading">
-                    <span class="day-name">${dayNames[dayKey]}</span>
-                    <span class="day-date">${dateStr}</span>
-                </div>
-                <span class="day-indicator"></span>
-            </div>
-            <div class="session-title">${titleContent}</div>
-        `;
-
-        dayCard.addEventListener('click', () => openModal(dayKey));
-        weekView.appendChild(dayCard);
-    });
-}
-
-// Open Modal
-function openModal(dayKey) {
-    currentDay = dayKey;
-    const modal = document.getElementById('sessionModal');
-    const dayData = workoutData.weeks[dayKey];
-    const rotationActive = isRotationActive();
-
-    // Set modal title
-    document.getElementById('modalDay').textContent = dayNames[dayKey];
-
-    // Set session type
-    updateSessionType(dayData.type);
-
-    // Handle rotation days specifically (not workout template days)
-    if (rotationActive && dayData.type === 'rotation') {
-        const rotatedSession = getRotatedSessionForDay(dayKey);
-        const sessionDisplay = document.getElementById('rotationCurrentSession');
-
-        if (rotatedSession) {
-            sessionDisplay.innerHTML = `
-                <h4>Cette semaine</h4>
-                <div class="session-name">${rotatedSession.name || 'Séance d\'entraînement'}</div>
-                <div class="rotation-exercises-preview" style="margin-top: 16px;">
-                    ${rotatedSession.exercises.map(ex => `
-                        <div style="padding: 8px 0; border-bottom: 1px solid #eee;">
-                            <div style="font-weight: 500;">${ex.name || 'Exercice'}</div>
-                            <div style="font-size: 13px; color: var(--text-light); margin-top: 4px;">
-                                ${ex.weight ? ex.weight + ' kg' : '-'} • ${ex.sets || '-'} séries • ${ex.reps || '-'} reps
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        } else {
-            sessionDisplay.innerHTML = `
-                <p style="font-size: 14px; color: var(--text-light);">
-                    Aucune séance définie pour la rotation.<br>
-                    Créez d'abord des séances en mode "Séance".
-                </p>
-            `;
+    // Day type toggle (Repos / Entraînement)
+    const typeBtn = e.target.closest('.toggle-btn[data-type]');
+    if (typeBtn) {
+        const day = typeBtn.dataset.day;
+        const newType = typeBtn.dataset.type;
+        if (workoutData.weeks[day].type !== newType) {
+            workoutData.weeks[day].type = newType;
+            save();
+            // Body content depends on type — replace the whole card
+            replaceDayCard(day);
+            // Rotation pool may have changed — refresh all summaries
+            if (workoutData.settings.rotationActive) {
+                refreshAllSummaries();
+            }
         }
-        // Show rotation section (set type to rotation for display)
-        updateSessionType('rotation');
-        switchToEditMode();
-    } else if (dayData.type === 'workout') {
-        // No rotation active, show normal workout
-        const hasSavedData = dayData.name || dayData.exercises.length > 0;
-        document.getElementById('sessionName').value = dayData.name || '';
-        renderExercises();
+        return;
+    }
 
-        if (hasSavedData) {
-            switchToViewMode();
-        } else {
-            switchToEditMode();
+    // Add exercise
+    const addBtn = e.target.closest('[data-action="add-exercise"]');
+    if (addBtn) {
+        const day = addBtn.dataset.day;
+        workoutData.weeks[day].exercises.push({ name: '', weight: '', sets: '', reps: '' });
+        save();
+        replaceDayCard(day);
+        // Focus the newly added exercise's name input
+        const newCard = document.querySelector(`.day-card[data-day="${day}"]`);
+        const lastExerciseName = newCard && newCard.querySelectorAll('.exercise-name-input');
+        if (lastExerciseName && lastExerciseName.length) {
+            lastExerciseName[lastExerciseName.length - 1].focus();
         }
-    } else if (dayData.type === 'rest') {
-        // Rest day - show in edit mode
-        switchToEditMode();
+        return;
     }
 
-    // Show modal
-    modal.classList.add('active');
-}
-
-// Close Modal
-function closeModal() {
-    const modal = document.getElementById('sessionModal');
-    modal.classList.remove('active');
-    currentDay = null;
-    currentMode = 'edit';
-}
-
-// Switch to View Mode
-function switchToViewMode() {
-    currentMode = 'view';
-
-    // Show/hide sections
-    document.getElementById('viewMode').style.display = 'block';
-    document.getElementById('editMode').style.display = 'none';
-    document.getElementById('sessionTypeToggle').style.display = 'none';
-
-    // Show/hide buttons
-    document.getElementById('editBtn').style.display = 'block';
-    document.getElementById('saveBtn').style.display = 'none';
-
-    // Render view mode content
-    renderViewMode();
-}
-
-// Switch to Edit Mode
-function switchToEditMode() {
-    currentMode = 'edit';
-
-    // Show/hide sections
-    document.getElementById('viewMode').style.display = 'none';
-    document.getElementById('editMode').style.display = 'block';
-    document.getElementById('sessionTypeToggle').style.display = 'flex';
-
-    // Show/hide buttons
-    document.getElementById('editBtn').style.display = 'none';
-    document.getElementById('saveBtn').style.display = 'block';
-
-    // Update session type display
-    const dayData = workoutData.weeks[currentDay];
-    updateSessionType(dayData.type);
-}
-
-// Render View Mode
-function renderViewMode() {
-    if (!currentDay) return;
-
-    const dayData = workoutData.weeks[currentDay];
-    const viewSessionName = document.getElementById('viewSessionName');
-    const viewExercisesContainer = document.getElementById('viewExercisesContainer');
-
-    // Display session name
-    viewSessionName.textContent = dayData.name || 'Séance d\'entraînement';
-
-    // Clear container
-    viewExercisesContainer.innerHTML = '';
-
-    // Display exercises
-    if (dayData.exercises.length === 0) {
-        viewExercisesContainer.innerHTML = `
-            <div class="view-empty-state">
-                <p>Aucun exercice pour cette séance</p>
-                <span>Cliquez sur "Modifier" pour en ajouter</span>
-            </div>
-        `;
-    } else {
-        dayData.exercises.forEach(exercise => {
-            const exerciseCard = createViewExerciseCard(exercise);
-            viewExercisesContainer.appendChild(exerciseCard);
-        });
+    // Delete exercise
+    const deleteBtn = e.target.closest('[data-action="delete-exercise"]');
+    if (deleteBtn) {
+        const exCard = deleteBtn.closest('.exercise-card');
+        const day = exCard.dataset.day;
+        const idx = parseInt(exCard.dataset.index, 10);
+        workoutData.weeks[day].exercises.splice(idx, 1);
+        save();
+        replaceDayCard(day);
+        if (workoutData.settings.rotationActive) {
+            refreshAllSummaries();
+        }
     }
 }
 
-// Create View Exercise Card
-function createViewExerciseCard(exercise) {
-    const card = document.createElement('div');
-    card.className = 'view-exercise-card';
+function handleWeekViewInput(e) {
+    // Session name typing — auto-save + refresh summary
+    const sessionInput = e.target.closest('.session-name-input');
+    if (sessionInput) {
+        const day = sessionInput.dataset.day;
+        workoutData.weeks[day].name = sessionInput.value;
+        save();
+        if (workoutData.settings.rotationActive) {
+            refreshAllSummaries();
+        } else {
+            refreshDayCardSummary(day);
+        }
+        return;
+    }
 
-    const weightDisplay = exercise.weight ? `${exercise.weight}<span class="unit">kg</span>` : '-';
-    const setsDisplay = exercise.sets || '-';
-    const repsDisplay = exercise.reps || '-';
-
-    card.innerHTML = `
-        <div class="view-exercise-name">${exercise.name || 'Exercice sans nom'}</div>
-        <div class="view-exercise-details">
-            <div class="view-detail-item">
-                <div class="view-detail-label">Poids</div>
-                <div class="view-detail-value">${weightDisplay}</div>
-            </div>
-            <div class="view-detail-item">
-                <div class="view-detail-label">Séries</div>
-                <div class="view-detail-value">${setsDisplay}</div>
-            </div>
-            <div class="view-detail-item">
-                <div class="view-detail-label">Reps</div>
-                <div class="view-detail-value">${repsDisplay}</div>
-            </div>
-        </div>
-    `;
-
-    return card;
-}
-
-// Update Session Type
-function updateSessionType(type) {
-    const workoutSection = document.getElementById('workoutSection');
-    const restSection = document.getElementById('restSection');
-    const rotationSection = document.getElementById('rotationSection');
-    const toggleBtns = document.querySelectorAll('.toggle-btn');
-
-    toggleBtns.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.type === type);
-    });
-
-    // Hide all sections first
-    workoutSection.style.display = 'none';
-    restSection.style.display = 'none';
-    rotationSection.style.display = 'none';
-
-    // Show the appropriate section
-    if (type === 'workout') {
-        workoutSection.style.display = 'block';
-    } else if (type === 'rest') {
-        restSection.style.display = 'block';
-    } else if (type === 'rotation') {
-        rotationSection.style.display = 'block';
+    // Exercise field typing — auto-save
+    const exerciseInput = e.target.closest('.exercise-card input[data-field]');
+    if (exerciseInput) {
+        const exCard = exerciseInput.closest('.exercise-card');
+        const day = exCard.dataset.day;
+        const idx = parseInt(exCard.dataset.index, 10);
+        const field = exerciseInput.dataset.field;
+        workoutData.weeks[day].exercises[idx][field] = exerciseInput.value;
+        save();
     }
 }
 
-// Render Exercises
-function renderExercises() {
-    const container = document.getElementById('exercisesContainer');
-    const dayData = workoutData.weeks[currentDay];
-
-    container.innerHTML = '';
-
-    dayData.exercises.forEach((exercise, index) => {
-        const exerciseCard = createExerciseCard(exercise, index);
-        container.appendChild(exerciseCard);
-    });
-}
-
-// Create Exercise Card
-function createExerciseCard(exercise, index) {
-    const card = document.createElement('div');
-    card.className = 'exercise-card';
-    card.dataset.index = index;
-
-    card.innerHTML = `
-        <div class="exercise-header">
-            <input
-                type="text"
-                class="exercise-name-input"
-                placeholder="Nom de l'exercice"
-                value="${exercise.name || ''}"
-                data-index="${index}"
-            >
-            <button class="delete-exercise-btn" data-index="${index}">×</button>
-        </div>
-        <div class="exercise-details">
-            <div class="detail-group">
-                <label class="detail-label">Poids (kg)</label>
-                <input
-                    type="number"
-                    class="detail-input weight-input"
-                    placeholder="0"
-                    value="${exercise.weight || ''}"
-                    data-index="${index}"
-                    min="0"
-                    step="0.5"
-                >
-            </div>
-            <div class="detail-group">
-                <label class="detail-label">Séries</label>
-                <input
-                    type="number"
-                    class="detail-input sets-input"
-                    placeholder="0"
-                    value="${exercise.sets || ''}"
-                    data-index="${index}"
-                    min="1"
-                >
-            </div>
-            <div class="detail-group">
-                <label class="detail-label">Reps</label>
-                <input
-                    type="number"
-                    class="detail-input reps-input"
-                    placeholder="0"
-                    value="${exercise.reps || ''}"
-                    data-index="${index}"
-                    min="1"
-                >
-            </div>
-        </div>
-    `;
-
-    // Attach event listeners
-    const nameInput = card.querySelector('.exercise-name-input');
-    const weightInput = card.querySelector('.weight-input');
-    const setsInput = card.querySelector('.sets-input');
-    const repsInput = card.querySelector('.reps-input');
-    const deleteBtn = card.querySelector('.delete-exercise-btn');
-
-    nameInput.addEventListener('input', (e) => updateExercise(index, 'name', e.target.value));
-    weightInput.addEventListener('input', (e) => updateExercise(index, 'weight', e.target.value));
-    setsInput.addEventListener('input', (e) => updateExercise(index, 'sets', e.target.value));
-    repsInput.addEventListener('input', (e) => updateExercise(index, 'reps', e.target.value));
-    deleteBtn.addEventListener('click', () => deleteExercise(index));
-
-    return card;
-}
-
-// Add Exercise
-function addExercise() {
-    if (!currentDay) return;
-
-    const dayData = workoutData.weeks[currentDay];
-    dayData.exercises.push({
-        name: '',
-        weight: '',
-        sets: '',
-        reps: ''
-    });
-
-    renderExercises();
-}
-
-// Update Exercise
-function updateExercise(index, field, value) {
-    if (!currentDay) return;
-
-    const dayData = workoutData.weeks[currentDay];
-    if (dayData.exercises[index]) {
-        dayData.exercises[index][field] = value;
-    }
-}
-
-// Delete Exercise
-function deleteExercise(index) {
-    if (!currentDay) return;
-
-    const dayData = workoutData.weeks[currentDay];
-    dayData.exercises.splice(index, 1);
-    renderExercises();
-}
-
-// Save Session
-function saveSession() {
-    if (!currentDay) return;
-
-    const sessionType = document.querySelector('.toggle-btn.active').dataset.type;
-
-    workoutData.weeks[currentDay].type = sessionType;
-
-    // Handle based on type
-    if (sessionType === 'workout') {
-        const sessionName = document.getElementById('sessionName').value;
-        workoutData.weeks[currentDay].name = sessionName;
-    } else {
-        // Clear data for rest and rotation types
-        workoutData.weeks[currentDay].name = '';
-        workoutData.weeks[currentDay].exercises = [];
-    }
-
-    saveToLocalStorage();
-    renderWeekView();
-
-    // Check if rotation info box should be shown
-    const hasRotation = Object.values(workoutData.weeks).some(day => day.type === 'rotation');
-    document.getElementById('rotationInfoBox').style.display = hasRotation ? 'block' : 'none';
-
-    // Switch to view mode if workout session with data
-    const dayData = workoutData.weeks[currentDay];
-    const hasSavedData = sessionType === 'workout' && (dayData.name || dayData.exercises.length > 0);
-
-    if (hasSavedData) {
-        switchToViewMode();
-    } else {
-        closeModal();
-    }
-}
-
-// Week navigation
-function goToPreviousWeek() {
-    if (workoutData.currentWeek > 1) {
-        workoutData.currentWeek--;
-        renderWeekView();
-        saveToLocalStorage();
-    }
-}
-
-function goToNextWeek() {
-    workoutData.currentWeek++;
-    renderWeekView();
-    saveToLocalStorage();
-}
-
-// Local Storage Functions
-function saveToLocalStorage() {
+// ============================================================================
+// Persistence
+// ============================================================================
+function save() {
     try {
         localStorage.setItem('workoutTrackerData', JSON.stringify(workoutData));
-    } catch (error) {
-        console.error('Error saving to localStorage:', error);
+    } catch (e) {
+        console.error('Save failed:', e);
     }
 }
 
 function loadFromLocalStorage() {
     try {
-        const savedData = localStorage.getItem('workoutTrackerData');
-        if (savedData) {
-            workoutData = JSON.parse(savedData);
+        const saved = localStorage.getItem('workoutTrackerData');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            // Merge with defaults so we don't lose new fields
+            workoutData = Object.assign({}, workoutData, parsed);
+            workoutData.weeks = Object.assign({}, workoutData.weeks, parsed.weeks || {});
+            workoutData.settings = Object.assign({ rotationActive: false }, parsed.settings || {});
         }
-    } catch (error) {
-        console.error('Error loading from localStorage:', error);
+    } catch (e) {
+        console.error('Load failed:', e);
     }
 }
 
-// Attach Event Listeners
-function attachEventListeners() {
-    // Close modal
-    document.getElementById('closeModal').addEventListener('click', closeModal);
-
-    // Close modal when clicking outside
-    document.getElementById('sessionModal').addEventListener('click', (e) => {
-        if (e.target.id === 'sessionModal') {
-            closeModal();
-        }
-    });
-
-    // Session type toggle
-    document.querySelectorAll('.toggle-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            updateSessionType(btn.dataset.type);
-        });
-    });
-
-    // Add exercise button
-    document.getElementById('addExerciseBtn').addEventListener('click', addExercise);
-
-    // Save button
-    document.getElementById('saveBtn').addEventListener('click', saveSession);
-
-    // Edit button
-    document.getElementById('editBtn').addEventListener('click', switchToEditMode);
-
-    // Session name input
-    document.getElementById('sessionName').addEventListener('input', (e) => {
-        if (currentDay) {
-            workoutData.weeks[currentDay].name = e.target.value;
-        }
-    });
-
-    // Week navigation
-    document.getElementById('prevWeek').addEventListener('click', goToPreviousWeek);
-    document.getElementById('nextWeek').addEventListener('click', goToNextWeek);
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        // Escape to close modal
-        if (e.key === 'Escape') {
-            if (document.getElementById('sessionModal').classList.contains('active')) {
-                closeModal();
-            }
-        }
-
-        // Ctrl/Cmd + S to save
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-            e.preventDefault();
-            if (document.getElementById('sessionModal').classList.contains('active')) {
-                saveSession();
-            }
-        }
-    });
-}
-
-
-// Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', initApp);
-
-// Auto-save every 30 seconds
-setInterval(() => {
-    if (currentDay && workoutData.weeks[currentDay].type === 'workout') {
-        saveToLocalStorage();
-    }
-}, 30000);
+document.addEventListener('DOMContentLoaded', init);
