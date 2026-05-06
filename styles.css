@@ -174,6 +174,171 @@ header .subtitle {
 }
 
 /* ==========================================================================
+   TODAY HERO — dominant card on workout page
+   ========================================================================== */
+.today-hero {
+    margin-bottom: 26px;
+    animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s backwards;
+}
+
+.today-hero-card {
+    position: relative;
+    padding: 26px 24px 22px;
+    border-radius: var(--r-xl);
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.4s ease;
+    background: linear-gradient(135deg,
+        hsla(211, 75%, 64%, 0.92) 0%,
+        hsla(220, 78%, 66%, 0.92) 50%,
+        hsla(232, 70%, 70%, 0.92) 100%);
+    color: white;
+    border: 1px solid hsla(0, 0%, 100%, 0.4);
+    box-shadow:
+        0 12px 36px hsla(211, 60%, 45%, 0.32),
+        inset 0 1px 0 0 hsla(0, 0%, 100%, 0.45);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.today-hero-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 100% 60% at 0% 0%, hsla(0, 0%, 100%, 0.35) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 60% at 100% 100%, hsla(220, 100%, 90%, 0.25) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.today-hero-card.rest {
+    background: linear-gradient(135deg,
+        hsla(0, 0%, 100%, 0.85) 0%,
+        hsla(210, 60%, 96%, 0.85) 100%);
+    color: var(--ink);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+        var(--shadow-lg),
+        inset 0 1px 0 0 var(--glass-highlight);
+}
+
+.today-hero-card.other-week {
+    background: hsla(0, 0%, 100%, 0.55);
+    color: var(--ink-soft);
+    border: 1px dashed hsla(213, 30%, 70%, 0.45);
+    cursor: default;
+    box-shadow: none;
+    text-align: center;
+    padding: 22px;
+}
+
+.today-hero-card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+        0 18px 48px hsla(211, 60%, 45%, 0.4),
+        inset 0 1px 0 0 hsla(0, 0%, 100%, 0.5);
+}
+
+.today-hero-card.rest:hover {
+    box-shadow:
+        var(--shadow-xl),
+        inset 0 1px 0 0 var(--glass-highlight);
+}
+
+.today-hero-card.other-week:hover {
+    transform: none;
+}
+
+.today-hero-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.today-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: 10px;
+}
+
+.today-hero-card.rest .today-eyebrow {
+    color: var(--ink-muted);
+    opacity: 1;
+}
+
+.today-session-name {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.6px;
+    line-height: 1.15;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.today-meta {
+    font-size: 14px;
+    opacity: 0.85;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.today-hero-card.rest .today-meta {
+    color: var(--ink-muted);
+    opacity: 1;
+}
+
+.today-cta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid hsla(0, 0%, 100%, 0.25);
+}
+
+.today-hero-card.rest .today-cta-row {
+    border-top-color: hsla(213, 30%, 70%, 0.25);
+}
+
+.today-cta-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.today-cta-arrow {
+    font-size: 18px;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.today-hero-card:hover .today-cta-arrow {
+    transform: translateX(4px);
+}
+
+/* ==========================================================================
+   SECTION HEADER — title + inline week nav
+   ========================================================================== */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding: 0 4px;
+}
+
+.section-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.3px;
+}
+
+/* ==========================================================================
    GLASS PRIMITIVE — reusable glass surface
    ========================================================================== */
 .week-navigation,
@@ -202,12 +367,12 @@ header .subtitle {
    WEEK NAVIGATION
    ========================================================================== */
 .week-navigation {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-radius: var(--r-lg);
-    margin-bottom: 20px;
+    gap: 8px;
+    padding: 4px;
+    border-radius: var(--r-pill);
+    margin: 0;
 }
 
 .week-nav-btn {
@@ -215,13 +380,13 @@ header .subtitle {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border-soft);
-    border-radius: var(--r-md);
-    width: 42px;
-    height: 42px;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 14px;
     color: var(--ink-soft);
     cursor: pointer;
     transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
@@ -243,24 +408,23 @@ header .subtitle {
 
 .week-info {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
+    align-items: baseline;
+    gap: 4px;
+    padding: 0 4px;
 }
 
 .week-label {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--ink-muted);
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
+    letter-spacing: 0.3px;
     font-weight: 500;
 }
 
 .week-number {
-    font-size: 26px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--blue-dark);
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
     line-height: 1;
 }
 
@@ -270,13 +434,13 @@ header .subtitle {
 .week-view {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     margin-bottom: 24px;
 }
 
 .day-card {
-    border-radius: var(--r-lg);
-    padding: 18px 20px;
+    border-radius: var(--r-md);
+    padding: 14px 16px;
     cursor: pointer;
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
                 box-shadow 0.35s ease,
@@ -306,13 +470,18 @@ header .subtitle {
 
 .day-card.workout {
     background: linear-gradient(135deg,
-        hsla(211, 70%, 65%, 0.85) 0%,
-        hsla(220, 75%, 68%, 0.85) 100%);
-    color: white;
-    border: 1px solid hsla(0, 0%, 100%, 0.35);
+        hsla(211, 65%, 88%, 0.7) 0%,
+        hsla(220, 70%, 90%, 0.7) 100%);
+    color: var(--ink);
+    border: 1px solid hsla(211, 60%, 75%, 0.3);
     box-shadow:
-        0 8px 28px hsla(211, 60%, 50%, 0.28),
-        inset 0 1px 0 0 hsla(0, 0%, 100%, 0.4);
+        0 4px 14px hsla(211, 60%, 50%, 0.12),
+        inset 0 1px 0 0 hsla(0, 0%, 100%, 0.6);
+}
+
+.day-card.workout .session-title {
+    color: var(--blue-dark);
+    font-weight: 500;
 }
 
 .day-card.workout::after {
@@ -320,36 +489,38 @@ header .subtitle {
     opacity: 1;
 }
 
-#workoutPage .day-card.current-day {
-    transform: scale(1.04);
-    box-shadow:
-        0 12px 40px hsla(211, 60%, 50%, 0.22),
-        inset 0 1px 0 0 hsla(0, 0%, 100%, 0.6);
+.day-card.current-day {
     border: 1.5px solid var(--primary-blue);
+    box-shadow:
+        0 6px 20px hsla(211, 60%, 50%, 0.18),
+        inset 0 1px 0 0 var(--glass-highlight);
 }
 
-#workoutPage .day-card.current-day .day-name {
-    font-size: 18px;
+.day-card.current-day .day-date {
+    font-size: 0;
+}
+
+.day-card.current-day .day-date::before {
+    content: 'Aujourd\'hui';
+    font-size: 11px;
+    color: var(--blue-dark);
     font-weight: 700;
-}
-
-#workoutPage .day-card.current-day .session-title {
-    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 2px 8px;
+    background: hsla(211, 60%, 88%, 0.65);
+    border-radius: var(--r-pill);
 }
 
 .day-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .day-card.workout:hover {
     box-shadow:
-        0 14px 40px hsla(211, 60%, 50%, 0.35),
-        inset 0 1px 0 0 hsla(0, 0%, 100%, 0.4);
-}
-
-#workoutPage .day-card.current-day:hover {
-    transform: scale(1.04) translateY(-3px);
+        0 8px 24px hsla(211, 60%, 50%, 0.18),
+        inset 0 1px 0 0 hsla(0, 0%, 100%, 0.7);
 }
 
 .day-card:active {
@@ -360,42 +531,50 @@ header .subtitle {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
     position: relative;
     z-index: 1;
 }
 
+.day-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
 .day-name {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.2px;
+}
+
+.day-date {
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    letter-spacing: 0.1px;
 }
 
 .day-indicator {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: currentColor;
-    opacity: 0.4;
-    box-shadow: 0 0 0 3px hsla(0, 0%, 100%, 0.15);
+    opacity: 0.3;
 }
 
 .day-card.workout .day-indicator {
     opacity: 1;
-    background: white;
-    box-shadow: 0 0 0 3px hsla(0, 0%, 100%, 0.3);
+    background: var(--primary-blue);
+    box-shadow: 0 0 0 3px hsla(211, 60%, 70%, 0.2);
 }
 
 .session-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 400;
-    opacity: 0.75;
+    color: var(--ink-soft);
     position: relative;
     z-index: 1;
-}
-
-.day-card.workout .session-title {
-    opacity: 0.95;
 }
 
 /* ==========================================================================
@@ -1234,6 +1413,7 @@ select.form-input {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 22px;
+    gap: 12px;
 }
 
 .daily-header h3 {
@@ -1243,10 +1423,47 @@ select.form-input {
     letter-spacing: -0.3px;
 }
 
+.daily-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: hsla(0, 0%, 100%, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border-soft);
+    border-radius: 50%;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    padding: 0;
+}
+
+.icon-btn:hover {
+    border-color: var(--primary-blue);
+    color: var(--blue-dark);
+    background: hsla(211, 60%, 92%, 0.6);
+    transform: rotate(40deg);
+}
+
+.icon-btn .icon {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
 .reset-day-btn {
     display: inline-flex;
     align-items: center;
-    padding: 8px 16px;
+    padding: 8px 14px;
     background: hsla(0, 0%, 100%, 0.5);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -1266,94 +1483,116 @@ select.form-input {
     background: hsla(211, 60%, 92%, 0.6);
 }
 
-/* === Macros Overview === */
+/* === Macros Overview — circular Activity rings === */
 .macros-overview {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
     margin-bottom: 24px;
 }
 
 .macro-card {
-    border-radius: var(--r-lg);
-    padding: 20px 22px;
+    border-radius: var(--r-xl);
+    padding: 20px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
 }
 
-.macro-label {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--ink-muted);
-    margin-bottom: 14px;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-}
-
-.macro-bar {
-    width: 100%;
-    height: 10px;
-    background: hsla(213, 30%, 88%, 0.5);
-    border-radius: var(--r-pill);
-    overflow: hidden;
-    margin-bottom: 14px;
-    border: 1px solid hsla(213, 30%, 80%, 0.25);
-    box-shadow: inset 0 1px 2px hsla(213, 35%, 25%, 0.05);
-}
-
-.macro-bar-fill {
-    height: 100%;
-    border-radius: var(--r-pill);
-    transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+.macro-ring {
     position: relative;
-    box-shadow: 0 0 12px hsla(211, 60%, 50%, 0.3);
+    width: 100%;
+    max-width: 160px;
+    aspect-ratio: 1 / 1;
 }
 
-.macro-bar-fill::after {
-    content: '';
+.ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    overflow: visible;
+}
+
+.ring-track {
+    fill: none;
+    stroke: hsla(213, 30%, 85%, 0.45);
+    stroke-width: 9;
+}
+
+.ring-fill {
+    fill: none;
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-dasharray: 326.7;
+    stroke-dashoffset: 326.7;
+    transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    filter: drop-shadow(0 2px 8px hsla(211, 60%, 50%, 0.3));
+}
+
+.ring-fill.calories-fill {
+    stroke: var(--primary-blue);
+    filter: drop-shadow(0 2px 10px hsla(211, 70%, 55%, 0.4));
+}
+
+.ring-fill.protein-fill {
+    stroke: var(--blue-dark);
+    filter: drop-shadow(0 2px 10px hsla(211, 50%, 35%, 0.35));
+}
+
+.ring-center {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, hsla(0, 0%, 100%, 0.35), transparent);
-    border-radius: inherit;
-}
-
-.calories-fill {
-    background: linear-gradient(90deg, var(--primary-blue) 0%, var(--accent-blue) 100%);
-}
-
-.protein-fill {
-    background: linear-gradient(90deg, var(--blue-dark) 0%, var(--primary-blue) 100%);
-}
-
-.macro-values {
     display: flex;
-    align-items: baseline;
-    gap: 4px;
-    font-size: 13.5px;
-    color: var(--ink-muted);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0 8px;
+    text-align: center;
 }
 
-.macro-current {
-    font-size: 26px;
+.ring-current {
+    font-size: 30px;
     font-weight: 700;
     color: var(--ink);
-    letter-spacing: -0.5px;
+    letter-spacing: -0.8px;
     line-height: 1;
 }
 
-.macro-separator {
+.ring-target-row {
+    font-size: 12px;
     color: var(--ink-muted);
-    margin: 0 2px;
+    font-weight: 500;
+    margin-top: 2px;
+    display: flex;
+    gap: 3px;
+    align-items: baseline;
 }
 
-.macro-target {
-    font-size: 17px;
+.ring-separator {
+    color: var(--ink-muted);
+}
+
+.ring-target {
+    color: var(--ink-soft);
+    font-weight: 600;
+}
+
+.ring-unit {
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-top: 4px;
+    font-weight: 600;
+}
+
+.macro-label {
+    font-size: 13px;
     font-weight: 600;
     color: var(--ink-soft);
-}
-
-.macro-unit {
-    font-size: 12px;
-    margin-left: 4px;
-    font-weight: 500;
+    letter-spacing: 0.2px;
 }
 
 /* === Quick Add === */
@@ -1531,6 +1770,14 @@ select.form-input {
 
 @media (min-width: 768px) {
     .quick-add-inputs { flex-wrap: nowrap; }
-    .macros-overview { flex-direction: row; }
-    .macro-card { flex: 1; }
+    .macros-overview { gap: 16px; }
+    .macro-ring { max-width: 180px; }
+    .ring-current { font-size: 34px; }
+    .today-session-name { font-size: 32px; }
+    .today-hero-card { padding: 30px 28px 26px; }
+}
+
+@media (max-width: 360px) {
+    .macros-overview { grid-template-columns: 1fr; }
+    .macro-ring { max-width: 200px; }
 }

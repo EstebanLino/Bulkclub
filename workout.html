@@ -44,17 +44,25 @@
         <!-- Header -->
         <header>
             <h1>Mes Séances</h1>
-            <p class="subtitle">Planifiez et suivez vos entraînements</p>
+            <p class="subtitle" id="todayDateLabel">Planifiez et suivez vos entraînements</p>
         </header>
 
-        <!-- Week Navigation (always visible) -->
-        <div class="week-navigation" id="weekNavigation">
-            <button class="week-nav-btn" id="prevWeek">←</button>
-            <div class="week-info">
-                <span class="week-label">Semaine</span>
-                <span class="week-number" id="weekNumber">1</span>
+        <!-- Today Hero - dominant card showing today's session -->
+        <section class="today-hero" id="todayHero">
+            <!-- Populated by JavaScript -->
+        </section>
+
+        <!-- Week Section header -->
+        <div class="section-header">
+            <h2 class="section-title">Cette semaine</h2>
+            <div class="week-navigation" id="weekNavigation">
+                <button class="week-nav-btn" id="prevWeek" aria-label="Semaine précédente">←</button>
+                <div class="week-info">
+                    <span class="week-label">Sem.</span>
+                    <span class="week-number" id="weekNumber">1</span>
+                </div>
+                <button class="week-nav-btn" id="nextWeek" aria-label="Semaine suivante">→</button>
             </div>
-            <button class="week-nav-btn" id="nextWeek">→</button>
         </div>
 
         <!-- Week View -->

@@ -216,6 +216,18 @@ function renderMealList() {
     });
 }
 
+// Ring geometry — must match the SVG circles' r attribute
+const RING_RADIUS = 52;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+function applyRingProgress(circleEl, percent) {
+    if (!circleEl) return;
+    const clamped = Math.max(0, Math.min(percent, 100));
+    const offset = RING_CIRCUMFERENCE - (clamped / 100) * RING_CIRCUMFERENCE;
+    circleEl.style.strokeDasharray = String(RING_CIRCUMFERENCE);
+    circleEl.style.strokeDashoffset = String(offset);
+}
+
 // Update Macro Display
 function updateMacroDisplay() {
     const caloriesCurrent = nutritionData.daily.calories;
@@ -229,17 +241,20 @@ function updateMacroDisplay() {
     document.getElementById('proteinCurrent').textContent = proteinCurrent.toFixed(1);
     document.getElementById('proteinTarget').textContent = proteinTarget;
 
-    // Update progress bars
-    const caloriesPercent = Math.min((caloriesCurrent / caloriesTarget) * 100, 100);
-    const proteinPercent = Math.min((proteinCurrent / proteinTarget) * 100, 100);
+    // Update circular ring progress
+    const caloriesPercent = caloriesTarget ? (caloriesCurrent / caloriesTarget) * 100 : 0;
+    const proteinPercent = proteinTarget ? (proteinCurrent / proteinTarget) * 100 : 0;
+    applyRingProgress(document.getElementById('caloriesBar'), caloriesPercent);
+    applyRingProgress(document.getElementById('proteinBar'), proteinPercent);
 
-    document.getElementById('caloriesBar').style.width = caloriesPercent + '%';
-    document.getElementById('proteinBar').style.width = proteinPercent + '%';
-
-    // Update date
+    // Update dates
     const today = new Date();
-    const dateStr = today.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-    document.getElementById('dailyDate').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+    const longStr = today.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const formatted = longStr.charAt(0).toUpperCase() + longStr.slice(1);
+    const dailyDateEl = document.getElementById('dailyDate');
+    if (dailyDateEl) dailyDateEl.textContent = formatted;
+    const headerDateEl = document.getElementById('nutritionDateLabel');
+    if (headerDateEl) headerDateEl.textContent = formatted;
 }
 
 // Update Nutrition UI
@@ -296,6 +311,12 @@ function attachNutritionListeners() {
     // Meal tracking
     document.getElementById('addMealBtn').addEventListener('click', addMeal);
     document.getElementById('resetDayBtn').addEventListener('click', resetDaily);
+
+    // Edit profile button (gear) — only present when profile already exists
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    if (editProfileBtn) {
+        editProfileBtn.addEventListener('click', openProfileModal);
+    }
 
     // Allow Enter key in inputs
     document.getElementById('addCalories').addEventListener('keypress', (e) => {
