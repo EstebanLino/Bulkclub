@@ -27,6 +27,30 @@ const dayNames = {
     sunday: 'Dimanche'
 };
 
+// Day key order (Monday-first) used to compute calendar dates for the displayed week
+const dayKeyOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+// Compute the Monday-anchored date for each day key of the currently displayed week.
+// Week 1 = current real-life week. Navigating weeks shifts dates by 7 days.
+function getDateForDayKey(dayKey) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    // JS getDay(): Sunday=0..Saturday=6 — convert to Monday-first index (Mon=0..Sun=6)
+    const todayIdx = (today.getDay() + 6) % 7;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - todayIdx);
+
+    const weekOffset = (workoutData.currentWeek - 1) * 7;
+    const targetIdx = dayKeyOrder.indexOf(dayKey);
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + weekOffset + targetIdx);
+    return date;
+}
+
+function formatShortDate(date) {
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).replace('.', '');
+}
+
 // Current editing day
 let currentDay = null;
 
@@ -113,6 +137,92 @@ function getRotatedSessionForDay(dayKey) {
     return workoutSessions[sessionIndex];
 }
 
+// Resolve display info for a given day, taking rotation into account
+function resolveDayDisplay(dayKey) {
+    const dayData = workoutData.weeks[dayKey];
+    const rotationActive = isRotationActive();
+    let isWorkout = false;
+    let isRotated = false;
+    let sessionTitle = '';
+    let exerciseCount = 0;
+
+    if (rotationActive && (dayData.type === 'workout' || dayData.type === 'rotation')) {
+        const rotatedSession = getRotatedSessionForDay(dayKey);
+        if (rotatedSession) {
+            sessionTitle = rotatedSession.name || 'Séance';
+            exerciseCount = rotatedSession.exercises ? rotatedSession.exercises.length : 0;
+            isWorkout = true;
+            isRotated = true;
+        } else {
+            sessionTitle = 'Rotation (aucune séance)';
+            isWorkout = false;
+        }
+    } else if (dayData.type === 'workout') {
+        sessionTitle = dayData.name || 'Séance d\'entraînement';
+        exerciseCount = dayData.exercises ? dayData.exercises.length : 0;
+        isWorkout = true;
+    } else if (dayData.type === 'rest') {
+        sessionTitle = 'Jour de repos';
+        isWorkout = false;
+    }
+
+    return { isWorkout, isRotated, sessionTitle, exerciseCount };
+}
+
+// Render the "Today" hero card and the date subtitle
+function renderTodayHero() {
+    const heroEl = document.getElementById('todayHero');
+    const dateLabel = document.getElementById('todayDateLabel');
+    if (!heroEl) return;
+
+    const today = new Date();
+    const todayIdx = (today.getDay() + 6) % 7;
+    const todayKey = dayKeyOrder[todayIdx];
+    const fullDate = today.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    if (dateLabel) {
+        dateLabel.textContent = fullDate.charAt(0).toUpperCase() + fullDate.slice(1);
+    }
+
+    // Only show hero session for the displayed week if it matches the current real week
+    const showCurrent = workoutData.currentWeek === 1;
+    const display = showCurrent ? resolveDayDisplay(todayKey) : null;
+
+    if (!display) {
+        heroEl.innerHTML = `
+            <div class="today-hero-card other-week">
+                <div class="today-eyebrow">Semaine ${workoutData.currentWeek}</div>
+                <div class="today-session-name">Programmation à venir</div>
+                <div class="today-cta-text">Sélectionnez un jour ci-dessous</div>
+            </div>
+        `;
+        return;
+    }
+
+    const { isWorkout, isRotated, sessionTitle, exerciseCount } = display;
+    const rotationBadge = isRotated
+        ? `<svg class="rotation-icon-inline"><use href="#icon-rotation"></use></svg>`
+        : '';
+    const meta = isWorkout && exerciseCount > 0
+        ? `<div class="today-meta">${exerciseCount} exercice${exerciseCount > 1 ? 's' : ''}</div>`
+        : '';
+    const cta = isWorkout ? 'Voir la séance' : 'Détails';
+
+    heroEl.innerHTML = `
+        <div class="today-hero-card ${isWorkout ? 'workout' : 'rest'}" data-day="${todayKey}">
+            <div class="today-eyebrow">Aujourd'hui · ${dayNames[todayKey]}</div>
+            <div class="today-session-name">${rotationBadge}${sessionTitle}</div>
+            ${meta}
+            <div class="today-cta-row">
+                <span class="today-cta-text">${cta}</span>
+                <span class="today-cta-arrow">→</span>
+            </div>
+        </div>
+    `;
+
+    heroEl.querySelector('.today-hero-card').addEventListener('click', () => openModal(todayKey));
+}
+
 // Render Week View
 function renderWeekView() {
     const weekView = document.getElementById('weekView');
@@ -121,53 +231,33 @@ function renderWeekView() {
     // Update week number
     document.getElementById('weekNumber').textContent = workoutData.currentWeek;
 
-    const rotationActive = isRotationActive();
+    // Render today hero first
+    renderTodayHero();
 
-    // Get current day of week (0 = Sunday, 1 = Monday, etc.)
-    const today = new Date().getDay();
-    const dayKeyArray = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const currentDayKey = dayKeyArray[today];
+    // Get current day of week (Monday-first index)
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    const currentDayKey = dayKeyOrder[todayIdx];
+    const showTodayHighlight = workoutData.currentWeek === 1;
 
     Object.keys(dayNames).forEach(dayKey => {
-        const dayData = workoutData.weeks[dayKey];
-        let isWorkout = false;
-        let sessionTitle = '';
-        let isRotated = false;
-
-        // If rotation is active, ALL training days show rotated sessions
-        if (rotationActive && (dayData.type === 'workout' || dayData.type === 'rotation')) {
-            const rotatedSession = getRotatedSessionForDay(dayKey);
-            if (rotatedSession) {
-                sessionTitle = rotatedSession.name || 'Séance';
-                isWorkout = true;
-                isRotated = true;
-            } else {
-                sessionTitle = 'Rotation (aucune séance)';
-                isWorkout = false;
-            }
-        } else if (dayData.type === 'workout') {
-            // No rotation active, show normal workout
-            sessionTitle = dayData.name || 'Séance d\'entraînement';
-            isWorkout = true;
-        } else if (dayData.type === 'rest') {
-            sessionTitle = 'Jour de repos';
-            isWorkout = false;
-        }
+        const { isWorkout, isRotated, sessionTitle } = resolveDayDisplay(dayKey);
+        const isCurrentDay = showTodayHighlight && dayKey === currentDayKey;
+        const dateStr = formatShortDate(getDateForDayKey(dayKey));
 
         const dayCard = document.createElement('div');
-        const isCurrentDay = dayKey === currentDayKey;
         dayCard.className = `day-card ${isWorkout ? 'workout' : ''} ${isCurrentDay ? 'current-day' : ''}`;
         dayCard.dataset.day = dayKey;
 
-        // Add rotation icon if applicable
-        let titleContent = sessionTitle;
-        if (isRotated) {
-            titleContent = `<svg class="rotation-icon-inline"><use href="#icon-rotation"></use></svg>${sessionTitle}`;
-        }
+        const titleContent = isRotated
+            ? `<svg class="rotation-icon-inline"><use href="#icon-rotation"></use></svg>${sessionTitle}`
+            : sessionTitle;
 
         dayCard.innerHTML = `
             <div class="day-header">
-                <span class="day-name">${dayNames[dayKey]}</span>
+                <div class="day-heading">
+                    <span class="day-name">${dayNames[dayKey]}</span>
+                    <span class="day-date">${dateStr}</span>
+                </div>
                 <span class="day-indicator"></span>
             </div>
             <div class="session-title">${titleContent}</div>
